@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SimplePath"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "aim_at_speaker"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Copy of SimplePath"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
