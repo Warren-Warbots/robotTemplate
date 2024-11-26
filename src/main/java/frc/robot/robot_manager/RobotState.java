@@ -13,7 +13,9 @@ public enum RobotState {
     SPEAKER_SHOOTING(Color.kGreen,BlinkPattern.BLINK_FAST,true,4.0),
     AMP(Color.kBlue,BlinkPattern.SOLID,true,3.0),
     STOW_NO_GP(Color.kRed,BlinkPattern.SOLID),
-    STOW_HAS_GP(Color.kOrange,BlinkPattern.BLINK_SLOW);
+    STOW_HAS_GP(Color.kOrange,BlinkPattern.BLINK_SLOW),
+    INTAKING(Color.kAliceBlue,BlinkPattern.SOLID,false,3.0);
+
 
     private boolean snap;
     private double robotTopSpeed;

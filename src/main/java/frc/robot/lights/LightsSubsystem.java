@@ -5,6 +5,7 @@
 package frc.robot.lights;
 
 import com.ctre.phoenix.led.CANdle;
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.controls.Follower;
 
 import dev.doglog.DogLog;
@@ -34,10 +35,16 @@ public class LightsSubsystem extends SubsystemBase {
     private final Timer blinkTimer = new Timer();
     private Color color = Color.kWhite;
     private BlinkPattern blinkPattern = BlinkPattern.SOLID;
-
+    private boolean candleConnected = false;
     public LightsSubsystem(
             CANdle candle) {
         this.candle = candle;
+        if (candle!=null){
+            candleConnected=true;
+        }
+        if (Utils.isSimulation()){
+            candleConnected=false;
+        }
         blinkTimer.start();
     }
 
@@ -74,7 +81,10 @@ public class LightsSubsystem extends SubsystemBase {
         Color8Bit color8Bit = new Color8Bit(color);
 
         if (blinkPattern == BlinkPattern.SOLID) {
-            candle.setLEDs(color8Bit.red, color8Bit.green, color8Bit.blue);
+            if (candleConnected){
+
+                candle.setLEDs(color8Bit.red, color8Bit.green, color8Bit.blue);
+            }
         } else {
             double time = blinkTimer.get();
             double onDuration = 0;
@@ -90,9 +100,15 @@ public class LightsSubsystem extends SubsystemBase {
 
             if (time >= offDuration) {
                 blinkTimer.reset();
-                candle.setLEDs(0, 0, 0);
+                if (candleConnected){
+                    candle.setLEDs(0, 0, 0);
+
+                }
             } else if (time >= onDuration) {
-                candle.setLEDs(color8Bit.red, color8Bit.green, color8Bit.blue);
+                if (candleConnected){
+
+                        candle.setLEDs(color8Bit.red, color8Bit.green, color8Bit.blue);
+                } 
             }
         }
 

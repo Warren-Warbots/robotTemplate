@@ -4,9 +4,13 @@
 
 package frc.robot.swerve;
 
-import java.lang.reflect.Field;
+import java.util.Optional;
+import java.util.function.Supplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -22,9 +26,11 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -34,7 +40,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.ControllerHelpers;
-import frc.robot.util.FieldUtil;
 import frc.robot.util.FmsUtil;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
@@ -60,10 +65,10 @@ public class SwerveSubsystem extends SubsystemBase {
   private double m_lastSimTime;
   private Telemetry telem = new Telemetry(SwerveConstants.maxSpeed);
 
-
+  
   private Rotation2d snapAngle = new Rotation2d();
-  private boolean snapEnabled = false;
-
+  
+  private Pose2d targetPose = new Pose2d();
 
   /*
    * TODO
@@ -233,23 +238,28 @@ public class SwerveSubsystem extends SubsystemBase {
     lastAddedVisionTimestamp = estimatePose.timestampSeconds;
 
   }
-
+  
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
 
-    swerveDriveState = drivetrain.getState();
     if (SwerveConstants.useLimelight) {
       LimelightHelpers.SetRobotOrientation("", swerveDriveState.Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
       addVisionPosesToPoseEstimator(true);
     }
+    swerveDriveState = drivetrain.getState(); // not sure if this should be before or after vision pose est
+    
+   DogLog.log("Swerve/ModuleStates", swerveDriveState.ModuleStates);
+
 
     // logging here, dont log anything that ends up in the hoot log files (ie status
     // signals)
+
     DogLog.log("Swerve/EstimatedPose", swerveDriveState.Pose);
     DogLog.log("Swerve/TopSpeed",currTopSpeed);
     DogLog.log("Swerve/TopRotationSpeed",currTopRotationSpeed);
     DogLog.log("Swerve/State",state);
+    DogLog.log("Swerve/gyro",drivetrain.getPigeon2().getYaw().getValueAsDouble());
 
     if (DriverStation.isTeleop()) {
 
@@ -259,6 +269,8 @@ public class SwerveSubsystem extends SubsystemBase {
           && Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.snapEndThreshold) {
         state = SwerveState.NO_SNAP;
       }
+
+     
 
       switch (state) {
         case NO_SNAP:
@@ -282,7 +294,9 @@ public class SwerveSubsystem extends SubsystemBase {
       }
       
     } else {
-      // do nothing because auto will send commands to drivetrain seperately
+      // only do something when we are in snap mode, this should only happen when we are not driving,
+      // ie for aiming at things
+      // we need to be careful about enabling snap during a path
       if (state == SwerveState.SNAP) {
         drivetrain.setControl(drive_snap
             .withVelocityX(0)
@@ -291,6 +305,59 @@ public class SwerveSubsystem extends SubsystemBase {
       }
     }
 
+  }
+
+
+  
+  public Command calibrateWheelRadius(){
+  
+    double[] distances = new double[4];
+    for (int i =0; i<4;i++){
+          
+      distances[i]  = drivetrain.getModuleLocations()[i].getNorm(); // distance in meters to center of robot 
+    }
+    SwerveRequest.Idle idle = new SwerveRequest.Idle();
+    SwerveRequest.ApplyRobotSpeeds calibrationPosition = drive_robot_rel.withSpeeds(new ChassisSpeeds(0, 0, 0.35));
+    return run(()->drivetrain.setControl(calibrationPosition)).withTimeout(0.5)
+    .andThen(run(()->drivetrain.setControl(idle)).withTimeout(0.25))
+    .andThen(
+      runOnce( ()->{
+        drivetrain.getPigeon2().setYaw(0);
+        for (int i =0; i<4;i++){
+          
+          drivetrain.getModule(i).getDriveMotor().setPosition(0);
+        }
+        
+      }
+    )
+    ).andThen(
+      run(
+        ()->{
+          BaseStatusSignal.waitForAll(0.0, drivetrain.getPigeon2().getYaw(),
+          drivetrain.getModule(0).getDriveMotor().getRotorPosition(),
+          drivetrain.getModule(1).getDriveMotor().getRotorPosition(),
+          drivetrain.getModule(2).getDriveMotor().getRotorPosition(),
+          drivetrain.getModule(3).getDriveMotor().getRotorPosition()
+          );
+          double degrees_traveled= drivetrain.getPigeon2().getYaw(false).getValueAsDouble();
+          double avg_radius = 0;
+          for (Integer i =0; i<4;i++){
+            double arc_len_traveled = distances[i] * Units.degreesToRadians(degrees_traveled);
+            
+            double rotations =    drivetrain.getModule(i).getDriveMotor().getRotorPosition(false).getValueAsDouble()/TunerConstants.kDriveGearRatio; // latency comp in the future? or just make sure gyro value is pulled same as drive module
+            double est_circum = arc_len_traveled/rotations;
+            double est_radius = Units.metersToInches(Math.abs(est_circum/(Math.PI*2)));
+            avg_radius+=est_radius;
+            DogLog.log("Swerve/Module"+i.toString()+"radius",est_radius);
+          }
+          avg_radius/=4.0;
+          DogLog.log("Swerve/AvgRadius", avg_radius);
+          drivetrain.setControl(calibrationPosition);
+          
+        }
+      ).until(()->drivetrain.getPigeon2().getYaw().getValueAsDouble()>360*5)
+    );
+    
   }
 
   private void startSimThread() {

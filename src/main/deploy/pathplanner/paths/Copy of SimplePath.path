@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.7260634616055963,
-        "y": 5.738726169395466
+        "x": 2.823330006849587,
+        "y": 5.544193078907484
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.9321410779663615,
-        "y": 5.381789267555935
+        "x": 3.029407623210352,
+        "y": 5.187256177067953
       },
       "isLocked": false,
       "linkedName": "end1"
@@ -47,12 +47,24 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 1.0,
-      "rotationDegrees": -39.24543466889781
+      "rotationDegrees": -39.245434668897815
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "hi",
+      "waypointRelativePos": 0.8548931383576941,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "aim_at_speaker"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3,
     "maxAcceleration": 3,

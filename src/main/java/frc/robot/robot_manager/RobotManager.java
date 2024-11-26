@@ -18,7 +18,7 @@ import frc.robot.util.FieldUtil;
 public class RobotManager extends SubsystemBase {
     public RobotState state = RobotState.STOW_HAS_GP;
     public RobotState lastState = RobotState.STOW_NO_GP;
-    private SwerveSubsystem swerve;
+    public SwerveSubsystem swerve;
     private LightsSubsystem lights;
 
     public RobotManager(SwerveSubsystem swerve, LightsSubsystem lights) {
@@ -65,6 +65,8 @@ public class RobotManager extends SubsystemBase {
         break;
       case AMP:
         swerve.setSnapAngle(FieldUtil.getAmpAngle());
+        break;
+      case INTAKING:
         break;
       default:
         break;

@@ -28,8 +28,7 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
   private CommandXboxController driverController = new CommandXboxController(0);
   private SwerveSubsystem swerve = new SwerveSubsystem(driverController);
-  private final CANdle candle = new CANdle(Constants.Lights_ID,
-      Constants.CANBUS_NAME);
+  private final CANdle candle = null;
   private final LightsSubsystem lights = new LightsSubsystem(candle);
 
   private final RobotManager manager = new RobotManager(swerve, lights);
@@ -49,7 +48,7 @@ public class Robot extends TimedRobot {
     driverController.b().onTrue(manager.setModeCommand(RobotState.STOW_HAS_GP));
     driverController.y().onTrue(manager.setModeCommand(RobotState.AMP));
     
-
+    driverController.x().onTrue(manager.swerve.calibrateWheelRadius());
   }
 
   @Override

@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "SimplePath"
+            "pathName": "New Path"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "aim_at_speaker"
+            "name": "clear"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Copy of SimplePath"
+            "pathName": "New New Path"
           }
         }
       ]

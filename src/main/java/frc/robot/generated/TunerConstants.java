@@ -70,9 +70,9 @@ public class TunerConstants {
     // This may need to be tuned to your individual robot
     private static final double kCoupleRatio = 3.5;
 
-    private static final double kDriveGearRatio = 7.363636364;
+    public static final double kDriveGearRatio = 7.363636364;
     private static final double kSteerGearRatio = 12.8;
-    private static final Distance kWheelRadius = Inches.of(2.167);
+    private static final Distance kWheelRadius = Inches.of(2.000);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;
@@ -163,6 +163,8 @@ public class TunerConstants {
     public static final SwerveModuleConstants BackRight = ConstantCreator.createModuleConstants(
             kBackRightSteerMotorId, kBackRightDriveMotorId, kBackRightEncoderId, kBackRightEncoderOffset, kBackRightXPos, kBackRightYPos, kInvertRightSide, kBackRightSteerMotorInverted);
     
+
+        
     /**
      * Creates a CommandSwerveDrivetrain instance.
      * This should only be called once in your robot program,.

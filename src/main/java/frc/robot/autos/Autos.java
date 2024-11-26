@@ -5,14 +5,16 @@
 package frc.robot.autos;
 
 import java.util.Optional;
-
+import java.util.jar.Attributes.Name;
 
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.commands.PathfindingCommand;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import dev.doglog.DogLog;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,24 +35,31 @@ public class Autos {
 
     public Autos(RobotManager robotManager) {
         this.manager = robotManager;
-        
+
+        NamedCommands.registerCommand("Stow",
+                this.manager.setModeCommand(RobotState.STOW_NO_GP, true));
+
+        NamedCommands.registerCommand("aim_at_speaker",
+                this.manager.setModeCommand(RobotState.SPEAKER_SHOOTING, true)
+                        .andThen(Commands.waitSeconds(2.0))
+                        .andThen(this.manager.setModeCommand(RobotState.STOW_NO_GP, true)));
+
+        NamedCommands.registerCommand("intake",
+                this.manager.setModeCommand(RobotState.INTAKING)
+                        .alongWith(overrideY()));
+
+        NamedCommands.registerCommand("clear",
+                clear());
+
         autoChooser.setDefaultOption("DoNothing", AutoChoice.DO_NOTHING);
         autoChooser.addOption("Tests", AutoChoice.TESTS);
-        
+
         SmartDashboard.putData(autoChooser);
         FollowPathCommand.warmupCommand().schedule();
         PathfindingCommand.warmupCommand().schedule();
-        
 
-
-        NamedCommands.registerCommand("aim_at_speaker", 
-        manager.setModeCommand(RobotState.SPEAKER_SHOOTING,true)
-        .andThen(Commands.waitSeconds(2.0))
-        .andThen(manager.setModeCommand(RobotState.STOW_NO_GP,true)));
-        
         selectedAuto = new PathPlannerAuto(AutoChoice.DO_NOTHING.pathName);
     }
-
 
     public AutoChoice getAuto() {
         AutoChoice rawAuto = autoChooser.getSelected();
@@ -87,9 +96,51 @@ public class Autos {
     }
 
     public Command getAutoCommand() {
-        // return new PathPlannerAuto(getAuto().pathName);
         return selectedAuto;
     }
 
+
+    /*
+     * replace the ()->0.0 with methods that return feedback values 
+     * for example, if you were trying to grab a note on the centerline in 2024, you could do just a overrideY() feedback
+     * since you only need to move left/right to adjust for the note centering
+     * 
+     * in your robot manager or maybe a subsystem that tracks the notes, you would compute the difference between the 
+     * robots position and the notes position, multiply it by a kP and then return that value
+     * 
+     * ex: 
+     * in RobotManager.java:
+     * double kP = 3.0;
+     * 
+     * public double yErrorToNote(){
+     *  return kP* (notePose.getTranslation().getY() - robotPose.getTranslation().getY())
+     * }
+     * 
+     * in Autos.java
+     * 
+     * private Command overrideYToLineUpWithNote() {
+        return Commands.runOnce(() -> PPHolonomicDriveController.overrideYFeedback(manager::yErrorToNote));
+    }
+
+
+        once you made that command, when you started intaking you would make a named command that runs the
+        overrideYToLineUpWithNote command during the autopath 
+     */
+    private Command overrideX() {
+        return Commands.runOnce(() -> PPHolonomicDriveController.overrideXFeedback(() -> 0.0));
+    }
+    private Command overrideY() {
+        return Commands.runOnce(() -> PPHolonomicDriveController.overrideYFeedback(() -> 0.0));
+    }
+    private Command overrideXY() {
+        return Commands.runOnce(() -> PPHolonomicDriveController.overrideXYFeedback(() -> 0.0,()->0.0));
+    }
+    private Command overrideRotation() {
+        return Commands.runOnce(() -> PPHolonomicDriveController.overrideRotationFeedback(() -> 0.0));
+    }
+
+    private Command clear() {
+        return Commands.runOnce(() -> PPHolonomicDriveController.clearFeedbackOverrides());
+    }
 
 }
