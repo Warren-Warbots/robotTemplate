@@ -1,5 +1,8 @@
 package frc.robot.constants;
 
+import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
+import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
+
 public class Constants {
 
     public static boolean IS_COMP = false;
@@ -9,8 +12,15 @@ public class Constants {
 
     public static String CANBUS_NAME = "rio";
 
+    private static final ClosedLoopRampsConfigs CLOSED_LOOP_RAMP = new ClosedLoopRampsConfigs()
+            .withDutyCycleClosedLoopRampPeriod(0.04)
+            .withTorqueClosedLoopRampPeriod(0.04)
+            .withVoltageClosedLoopRampPeriod(0.04);
+    private static final OpenLoopRampsConfigs OPEN_LOOP_RAMP = new OpenLoopRampsConfigs()
+            .withDutyCycleOpenLoopRampPeriod(0.04)
+            .withTorqueOpenLoopRampPeriod(0.04)
+            .withVoltageOpenLoopRampPeriod(0.04);
 
-
-    //LIGHTS
+    // LIGHTS
     public static final int Lights_ID = 55;
 }

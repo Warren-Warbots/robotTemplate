@@ -53,6 +53,7 @@ public class Autos {
 
         autoChooser.setDefaultOption("DoNothing", AutoChoice.DO_NOTHING);
         autoChooser.addOption("Tests", AutoChoice.TESTS);
+        autoChooser.addOption("TestWheelRadius", AutoChoice.TEST_WHEEL_RADIUS);
 
         SmartDashboard.putData(autoChooser);
         FollowPathCommand.warmupCommand().schedule();

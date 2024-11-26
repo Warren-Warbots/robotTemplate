@@ -6,6 +6,7 @@ package frc.robot.autos;
 
 public enum AutoChoice {
     TESTS("Tests"),
+    TEST_WHEEL_RADIUS("test_wheel_radius_auto"),
     DO_NOTHING("DoNothing");
 
     public final String pathName;
