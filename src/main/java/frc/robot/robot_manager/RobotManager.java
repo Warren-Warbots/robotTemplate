@@ -74,7 +74,7 @@ public class RobotManager extends SubsystemBase {
     }
     if (lastState!=state){
       lights.setColor(state.getLedColor(), state.getBlinkPattern());
-      swerve.setRobotTopSpeeds(state.getRobotTopSpeed(),state.getRobotTopRotationalSpeed());
+      swerve.setRobotTopSpeeds(state.getRobotTopSpeedPercent(),state.getRobotTopRotationalSpeedPercent());
     }
     lastState = state;
 

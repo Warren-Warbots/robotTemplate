@@ -29,9 +29,9 @@ import frc.robot.swerve.SwerveSubsystem;
 /** Add your docs here. */
 public class Autos {
     private RobotManager manager;
-    private final SendableChooser<AutoChoice> autoChooser = new SendableChooser<>();
+    private final SendableChooser<String> autoChooser = new SendableChooser<>();
     private PathPlannerAuto selectedAuto;
-    private Optional<AutoChoice> lastSelectedAuto = Optional.empty();
+    private Optional<String> lastSelectedAuto = Optional.empty();
 
     public Autos(RobotManager robotManager) {
         this.manager = robotManager;
@@ -51,34 +51,28 @@ public class Autos {
         NamedCommands.registerCommand("clear",
                 clear());
 
-        autoChooser.setDefaultOption("DoNothing", AutoChoice.DO_NOTHING);
-        autoChooser.addOption("Tests", AutoChoice.TESTS);
-        autoChooser.addOption("TestWheelRadius", AutoChoice.TEST_WHEEL_RADIUS);
+        autoChooser.setDefaultOption("DoNothing", "DoNothing");
+        autoChooser.addOption("Tests", "Tests");
+        autoChooser.addOption("crazy", "crazy");
+        autoChooser.addOption("TestWheelRadius", "test_wheel_radius_auto");
 
         SmartDashboard.putData(autoChooser);
         FollowPathCommand.warmupCommand().schedule();
         PathfindingCommand.warmupCommand().schedule();
 
-        selectedAuto = new PathPlannerAuto(AutoChoice.DO_NOTHING.pathName);
+        selectedAuto = new PathPlannerAuto("DoNothing");
     }
 
-    public AutoChoice getAuto() {
-        AutoChoice rawAuto = autoChooser.getSelected();
-        if (rawAuto == null) {
-            rawAuto = AutoChoice.DO_NOTHING;
-        }
 
-        return rawAuto;
-    }
 
     public void preloadAuto() {
-        AutoChoice currentlySelectedAuto = autoChooser.getSelected();
+        String currentlySelectedAuto = autoChooser.getSelected();
         if (lastSelectedAuto.isEmpty()) {
             if (currentlySelectedAuto != null) {
 
                 lastSelectedAuto = Optional.of(currentlySelectedAuto);
             } else {
-                lastSelectedAuto = Optional.of(AutoChoice.DO_NOTHING);
+                lastSelectedAuto = Optional.of("DoNothing");
             }
 
         }
@@ -88,7 +82,7 @@ public class Autos {
             lastSelectedAuto = Optional.of(currentlySelectedAuto);
             try {
 
-                selectedAuto = new PathPlannerAuto(lastSelectedAuto.get().pathName);
+                selectedAuto = new PathPlannerAuto(lastSelectedAuto.get());
             } catch (Exception e) {
                 DogLog.log("AutoChooser/failedAutoName", currentlySelectedAuto);
             }

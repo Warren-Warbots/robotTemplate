@@ -85,6 +85,8 @@ public class Telemetry {
         m_poseArray[1] = pose.getY();
         m_poseArray[2] = pose.getRotation().getDegrees();
 
+        
+
         fieldTypePub.set("Field2d");
         fieldPub.set(m_poseArray);
 
@@ -111,7 +113,9 @@ public class Telemetry {
 
             SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
         }
-
+        
+        SignalLogger.writeDouble("xDist",pose.getX());
+        SignalLogger.writeDouble("yDist",pose.getY());
         SignalLogger.writeDoubleArray("odometry", m_poseArray);
         SignalLogger.writeDouble("odom period", state.OdometryPeriod, "seconds");
     }

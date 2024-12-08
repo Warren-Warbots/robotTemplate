@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -35,26 +36,29 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 import frc.robot.util.ControllerHelpers;
 import frc.robot.util.FmsUtil;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
+import static edu.wpi.first.units.Units.*;
 
 public class SwerveSubsystem extends SubsystemBase {
   /** Creates a new SweveSubsystem. */
-  private final SwerveDrivetrain drivetrain;
-  private final SwerveRequest.FieldCentric drive_no_snap;
-  private final SwerveRequest.ApplyRobotSpeeds drive_robot_rel;
-  private final SwerveRequest.FieldCentricFacingAngle drive_snap;
+  public SwerveDrivetrain drivetrain;
+  private SwerveRequest.FieldCentric drive_no_snap;
+  private SwerveRequest.ApplyRobotSpeeds drive_robot_rel;
+  private SwerveRequest.FieldCentricFacingAngle drive_snap;
   private SwerveState state = SwerveState.NO_SNAP;
-  private double currTopSpeed = SwerveConstants.maxSpeed;
-  private double currTopRotationSpeed = SwerveConstants.maxRotSpeed;
-  private final ChassisSpeeds driverDesiredSpeeds = new ChassisSpeeds();
+  private double currTopSpeedPercent = 1.0; // 0 to 1.0 -> percent of robotSpeedAt12V to drive at
+  private double currTopRotationSpeedPercent = 1.0; //also a percent
+  private ChassisSpeeds driverDesiredSpeeds = new ChassisSpeeds();
   private CommandXboxController driverXboxController;
   private SwerveDriveState swerveDriveState = new SwerveDriveState();
   private double lastAddedVisionTimestamp = 0;
@@ -69,7 +73,7 @@ public class SwerveSubsystem extends SubsystemBase {
   private Rotation2d snapAngle = new Rotation2d();
 
   private Pose2d targetPose = new Pose2d();
-  
+
   /*
    * TODO
    * current limits
@@ -82,8 +86,12 @@ public class SwerveSubsystem extends SubsystemBase {
   public SwerveSubsystem(CommandXboxController driverXboxController) {
     drivetrain = new SwerveDrivetrain(TunerConstants.DrivetrainConstants, TunerConstants.FrontLeft,
         TunerConstants.FrontRight, TunerConstants.BackLeft, TunerConstants.BackRight);
-    drive_no_snap = new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-    drive_snap = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+    drive_no_snap = new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity)
+    .withDeadband(0.05*TunerConstants.kSpeedAt12Volts.baseUnitMagnitude())
+    .withRotationalDeadband(0.05*SwerveConstants.maxRotSpeed);
+    drive_snap = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.Velocity)
+    .withDeadband(0.05*TunerConstants.kSpeedAt12Volts.baseUnitMagnitude())
+    .withRotationalDeadband(0.05*SwerveConstants.maxRotSpeed);
     drive_robot_rel = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     drive_snap.HeadingController = SwerveConstants.snapController;
     drive_snap.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
@@ -106,7 +114,6 @@ public class SwerveSubsystem extends SubsystemBase {
     double rotate = -1.0 * ControllerHelpers.getExponent(
         ControllerHelpers.getDeadbanded(driverXboxController.getRightX(), SwerveConstants.rightXDeadband),
         SwerveConstants.rightXExponent);
-
     if (!FmsUtil.isRedAlliance()) {
       strafe *= -1.0;
       forward *= -1.0;
@@ -191,16 +198,16 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   public double getRobotRotationSpeed() {
-    return currTopRotationSpeed;
+    return currTopRotationSpeedPercent* SwerveConstants.maxRotSpeed;
   }
 
   public double getRobotTopSpeed() {
-    return currTopSpeed;
+    return currTopSpeedPercent * SwerveConstants.maxSpeed;
   }
 
   public void setRobotTopSpeeds(double newTopSpeed, double newTopRotationSpeed) {
-    this.currTopSpeed = newTopSpeed;
-    this.currTopRotationSpeed = newTopRotationSpeed;
+    this.currTopSpeedPercent = newTopSpeed;
+    this.currTopRotationSpeedPercent = newTopRotationSpeed;
   }
 
   @Override
@@ -219,31 +226,31 @@ public class SwerveSubsystem extends SubsystemBase {
     // signals)
 
     DogLog.log("Swerve/EstimatedPose", swerveDriveState.Pose);
-    DogLog.log("Swerve/TopSpeed", currTopSpeed);
-    DogLog.log("Swerve/TopRotationSpeed", currTopRotationSpeed);
+    DogLog.log("Swerve/TopSpeedPercent", currTopSpeedPercent);
+    DogLog.log("Swerve/TopRotationSpeedPercent", currTopRotationSpeedPercent);
     DogLog.log("Swerve/State", state);
+
+    DogLog.log("Swerve/Speeds", swerveDriveState.Speeds);
 
     if (DriverStation.isTeleop()) {
 
       getTeleopDriveSpeeds();
       // if driver is trying to rotate during snap, cancel snap
-      if (state != SwerveState.NO_SNAP
+      if (state == SwerveState.SNAP
           && Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.snapEndThreshold) {
         state = SwerveState.NO_SNAP;
       }
-
+      DogLog.log("TeleopDesiredSpeeds", driverDesiredSpeeds);
       switch (state) {
         case NO_SNAP:
-          // if we arent trying to rotate, use a PIDController to try and keep rotational
-          // velocity at zero, so the robot doesnt stray
-          if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) < SwerveConstants.rightXDeadband) {
-            driverDesiredSpeeds.omegaRadiansPerSecond = SwerveConstants.noSnapController
-                .calculate(-1 * swerveDriveState.Speeds.omegaRadiansPerSecond, 0.0, 1.0);
-          }
+          
           drivetrain
               .setControl(drive_no_snap.withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
                   .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
-                  .withRotationalRate(driverDesiredSpeeds.omegaRadiansPerSecond * getRobotRotationSpeed()));
+                  .withRotationalRate(
+                    driverDesiredSpeeds.omegaRadiansPerSecond * getRobotRotationSpeed()
+                    
+                    ));
           break;
         case SNAP:
           drivetrain.setControl(drive_snap
@@ -251,7 +258,9 @@ public class SwerveSubsystem extends SubsystemBase {
               .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
               .withTargetDirection(this.snapAngle));
           break;
-        
+        case CALIBRATION:
+          // do nothing
+          break;
 
       }
 
@@ -268,6 +277,75 @@ public class SwerveSubsystem extends SubsystemBase {
       }
     }
 
+  }
+
+  /* Swerve requests to apply during SysId characterization */
+  private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
+  private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
+  private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+  /*
+   * SysId routine for characterizing translation. This is used to find PID gains
+   * for the drive motors.
+   */
+  private SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+      new SysIdRoutine.Config(
+          null, // Use default ramp rate (1 V/s)
+          Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+          null, // Use default timeout (10 s)
+          // Log state with SignalLogger class
+          state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+      new SysIdRoutine.Mechanism(
+          output -> drivetrain.setControl(m_translationCharacterization.withVolts(output)),
+          null,
+          this));
+
+  /*
+   * SysId routine for characterizing steer. This is used to find PID gains for
+   * the steer motors.
+   */
+  private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+      new SysIdRoutine.Config(
+          null, // Use default ramp rate (1 V/s)
+          Volts.of(7), // Use dynamic voltage of 7 V
+          null, // Use default timeout (10 s)
+          // Log state with SignalLogger class
+          state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+      new SysIdRoutine.Mechanism(
+          volts -> drivetrain.setControl(m_steerCharacterization.withVolts(volts)),
+          null,
+          this));
+
+  private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
+      new SysIdRoutine.Config(
+          /* This is in radians per second², but SysId only supports "volts per second" */
+          Volts.of(Math.PI / 6).per(Second),
+          /* This is in radians per second, but SysId only supports "volts" */
+          Volts.of(Math.PI),
+          null, // Use default timeout (10 s)
+          // Log state with SignalLogger class
+          state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+      new SysIdRoutine.Mechanism(
+          output -> {
+            /* output is actually radians per second, but SysId only supports "volts" */
+            drivetrain.setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
+            /* also log the requested output for SysId */
+            SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+          },
+          null,
+          this));
+
+  /* The SysId routine to test */
+  private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return Commands.runOnce(() -> state = SwerveState.CALIBRATION).andThen(m_sysIdRoutineToApply.quasistatic(direction))
+        .finallyDo(() -> state = SwerveState.NO_SNAP);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return Commands.runOnce(() -> state = SwerveState.CALIBRATION).andThen(m_sysIdRoutineToApply.dynamic(direction))
+        .finallyDo(() -> state = SwerveState.NO_SNAP);
   }
 
   public void addVisionPosesToPoseEstimator(boolean useMegaTag2) {
@@ -309,7 +387,42 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
 
-  
+  public Command testDriveGains(double vel){
+    return Commands.runOnce(()->state = SwerveState.CALIBRATION).andThen(
+      Commands.run(()->{
+      DogLog.log("Swerve/setVel", vel);
+      drivetrain.setControl(drive_robot_rel.withSpeeds(new ChassisSpeeds(vel,0, 0)));
+    })).finallyDo(() -> {state = SwerveState.NO_SNAP;
+      state=SwerveState.NO_SNAP;
+      drivetrain.setControl(new SwerveRequest.Idle());
+      DogLog.log("Swerve/setVel", 0);
+    }
+      );
+  }
+  public Command calibrateVolts(double volts){
+    SwerveRequest.SysIdSwerveTranslation kvRequest=  new SwerveRequest.SysIdSwerveTranslation();
+    return 
+    
+    Commands.runOnce(()->state = SwerveState.CALIBRATION).andThen(Commands.run(()->{
+      BaseStatusSignal.waitForAll(0.0,
+      drivetrain.getModule(0).getDriveMotor().getVelocity(),
+      drivetrain.getModule(1).getDriveMotor().getVelocity(),
+      drivetrain.getModule(2).getDriveMotor().getVelocity(),
+      drivetrain.getModule(3).getDriveMotor().getVelocity());
+      double avgvel =(drivetrain.getModule(0).getDriveMotor().getVelocity().getValueAsDouble()+
+      drivetrain.getModule(1).getDriveMotor().getVelocity().getValueAsDouble()+
+      drivetrain.getModule(2).getDriveMotor().getVelocity().getValueAsDouble()+
+      drivetrain.getModule(3).getDriveMotor().getVelocity().getValueAsDouble())/4.0;
+      DogLog.log("Swerve/volts",volts);
+      DogLog.log("Swerve/vel", avgvel);
+      if (avgvel>0.01){
+        DogLog.log("Swerve/kvEst", volts/avgvel);
+      }
+      drivetrain.setControl(kvRequest.withVolts(volts));
+    })).finallyDo(() -> {state = SwerveState.NO_SNAP;
+      DogLog.log("Swerve/kvEst", 0);
+    });
+  }
 
   public Command calibrateWheelRadius() {
 
@@ -319,11 +432,16 @@ public class SwerveSubsystem extends SubsystemBase {
       distances[i] = drivetrain.getModuleLocations()[i].getNorm(); // distance in meters to center of robot
     }
     SwerveRequest.Idle idle = new SwerveRequest.Idle();
-    SwerveRequest.ApplyRobotSpeeds calibrationPosition = drive_robot_rel.withSpeeds(new ChassisSpeeds(0, 0, 0.35));
+    // SwerveRequest.SysIdSwerveRotation calRotation = new SwerveRequest.SysIdSwerveRotation();
+    SwerveRequest.ApplyRobotSpeeds calRotation = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     // first rotate a bit so that the wheels get in the rotation positions (ie with
     // axles pointing towars the center of the robot)
-    return run(() -> drivetrain.setControl(calibrationPosition)).withTimeout(0.5)
-        // next stop for a bit
+    return run(() -> {
+      state = SwerveState.CALIBRATION;
+      drivetrain.setControl(calRotation.withSpeeds(new ChassisSpeeds(0, 0, 4.0)));
+      // drivetrain.setControl(calRotation.withRotationalRate(1.0));
+    }).withTimeout(0.15)
+        // // next stop for a bit
         .andThen(run(() -> drivetrain.setControl(idle)).withTimeout(0.25))
         // then zero the gyros and encoders
         .andThen(
@@ -342,6 +460,7 @@ public class SwerveSubsystem extends SubsystemBase {
             // wheel cirumfrence must be
             run(
                 () -> {
+                  state = SwerveState.CALIBRATION;
                   // refresh all of the signals so that the gyro value was taken at approx the
                   // same time as the encoder value
                   // in sim this moves us from an error of ~ 0.005" to < 0.001"
@@ -366,9 +485,12 @@ public class SwerveSubsystem extends SubsystemBase {
                   }
                   avg_radius /= 4.0;
                   DogLog.log("Swerve/AvgRadius", avg_radius);
-                  drivetrain.setControl(calibrationPosition);
+                  drivetrain.setControl(calRotation.withSpeeds(new ChassisSpeeds(0, 0, 4.0)));
 
-                }).until(() -> drivetrain.getPigeon2().getYaw().getValueAsDouble() > 360 * 5)
+                  // drivetrain.setControl(calRotation.withRotationalRate(1.0));
+
+                }).until(() -> drivetrain.getPigeon2().getYaw().getValueAsDouble() > 360 * 15)
+                .andThen(run(() -> drivetrain.setControl(idle)).withTimeout(0.25))
         // keep going for 5 full rotations, since the robot is driving slow this will
         // take a while
         );

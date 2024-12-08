@@ -5,18 +5,15 @@
 package frc.robot;
 
 import com.ctre.phoenix.led.CANdle;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.autos.Autos;
 import frc.robot.constants.Constants;
 import frc.robot.lights.LightsSubsystem;
@@ -44,15 +41,31 @@ public class Robot extends TimedRobot {
   }
 
   public void configureButtonBindings() {
+    // driverController.a().whileTrue(manager.swerve.testDriveGains(1.0));
+    // driverController.b().whileTrue(manager.swerve.testDriveGains(2.0));
+    // driverController.x().whileTrue(manager.swerve.testDriveGains(3.0));
+    // driverController.y().whileTrue(manager.swerve.testDriveGains(4.0));
+
+    // driverController.a().whileTrue(manager.swerve.calibrateVolts(0.15));
+    // driverController.b().whileTrue(manager.swerve.calibrateVolts(0.2));
+    // driverController.povDown().whileTrue(manager.swerve.calibrateVolts(12));
+    // driverController.povUp().whileTrue(manager.swerve.calibrateVolts(10.0));
+
+    // driverController.a().whileTrue(manager.swerve.sysIdDynamic(Direction.kForward));
+    // driverController.b().whileTrue(manager.swerve.sysIdDynamic(Direction.kReverse));
+    // driverController.x().whileTrue(manager.swerve.sysIdQuasistatic(Direction.kForward));
+    // driverController.y().whileTrue(manager.swerve.sysIdQuasistatic(Direction.kReverse));
+
     driverController.a().onTrue(manager.setModeCommand(RobotState.SPEAKER_SHOOTING));
     driverController.b().onTrue(manager.setModeCommand(RobotState.STOW_HAS_GP));
     driverController.y().onTrue(manager.setModeCommand(RobotState.AMP));
-    
     driverController.x().onTrue(manager.swerve.calibrateWheelRadius());
+    driverController.back().onTrue(Commands.runOnce(()->manager.swerve.drivetrain.tareEverything()));
   }
 
   @Override
   public void robotPeriodic() {
+
     CommandScheduler.getInstance().run();
 
   }

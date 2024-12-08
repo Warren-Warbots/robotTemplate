@@ -10,16 +10,16 @@ import frc.robot.swerve.SwerveConstants;
 
 /** Add your docs here. */
 public enum RobotState {
-    SPEAKER_SHOOTING(Color.kGreen,BlinkPattern.BLINK_FAST,true,4.0),
-    AMP(Color.kBlue,BlinkPattern.SOLID,true,3.0),
+    SPEAKER_SHOOTING(Color.kGreen,BlinkPattern.BLINK_FAST,true,1.0),
+    AMP(Color.kBlue,BlinkPattern.SOLID,true,0.5),
     STOW_NO_GP(Color.kRed,BlinkPattern.SOLID),
     STOW_HAS_GP(Color.kOrange,BlinkPattern.BLINK_SLOW),
-    INTAKING(Color.kAliceBlue,BlinkPattern.SOLID,false,3.0);
+    INTAKING(Color.kAliceBlue,BlinkPattern.SOLID,false,0.75);
 
 
     private boolean snap;
-    private double robotTopSpeed;
-    private double robotTopRotationalSpeed;
+    private double robotTopSpeedPercent;
+    private double robotTopRotationalSpeedPercent;
     private Color ledColor;
     private BlinkPattern blinkPattern;
 
@@ -27,44 +27,44 @@ public enum RobotState {
         this.snap = false;
         this.ledColor = ledColor;
         this.blinkPattern = blinkPattern;
-        this.robotTopSpeed = SwerveConstants.maxSpeed;
-        this.robotTopRotationalSpeed = SwerveConstants.maxRotSpeed;
+        this.robotTopSpeedPercent = SwerveConstants.maxSpeed;
+        this.robotTopRotationalSpeedPercent = SwerveConstants.maxRotSpeed;
     }
     
     RobotState(Color ledColor,BlinkPattern blinkPattern,boolean snap) {
         this.snap = snap;
         this.ledColor = ledColor;
         this.blinkPattern = blinkPattern;
-        this.robotTopSpeed = SwerveConstants.maxSpeed;
-        this.robotTopRotationalSpeed = SwerveConstants.maxRotSpeed;
+        this.robotTopSpeedPercent = SwerveConstants.maxSpeed;
+        this.robotTopRotationalSpeedPercent = SwerveConstants.maxRotSpeed;
     }
 
 
-    RobotState(Color ledColor,BlinkPattern blinkPattern,boolean snap, double robotTopSpeed) {
+    RobotState(Color ledColor,BlinkPattern blinkPattern,boolean snap, double robotTopSpeedPercent) {
         this.snap = snap;
         this.ledColor = ledColor;
         this.blinkPattern = blinkPattern;
-        this.robotTopSpeed = robotTopSpeed;
-        this.robotTopRotationalSpeed = SwerveConstants.maxRotSpeed;
+        this.robotTopSpeedPercent = robotTopSpeedPercent;
+        this.robotTopRotationalSpeedPercent = SwerveConstants.maxRotSpeed;
     }
 
-    RobotState(Color ledColor,BlinkPattern blinkPattern,boolean snap,double robotTopSpeed,double robotTopRotationalSpeed) {
+    RobotState(Color ledColor,BlinkPattern blinkPattern,boolean snap,double robotTopSpeedPercent,double robotTopRotationalSpeedPercent) {
         this.snap = snap;
         this.ledColor = ledColor;
         this.blinkPattern = blinkPattern;
-        this.robotTopSpeed = robotTopSpeed;
-        this.robotTopRotationalSpeed = robotTopRotationalSpeed;
+        this.robotTopSpeedPercent = robotTopSpeedPercent;
+        this.robotTopRotationalSpeedPercent = robotTopRotationalSpeedPercent;
     }
 
     public boolean isSnapState() {
         return snap;
     }
-    public double getRobotTopSpeed() {
-        return robotTopSpeed;
+    public double getRobotTopSpeedPercent() {
+        return robotTopSpeedPercent;
     }
 
-    public double getRobotTopRotationalSpeed() {
-        return robotTopRotationalSpeed;
+    public double getRobotTopRotationalSpeedPercent() {
+        return robotTopRotationalSpeedPercent;
     }
 
     public Color getLedColor() {

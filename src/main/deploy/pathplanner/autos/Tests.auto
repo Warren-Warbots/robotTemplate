@@ -11,15 +11,15 @@
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "clear"
+            "pathName": "New New Path"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "New New Path"
+            "pathName": "New New New Path"
           }
         }
       ]

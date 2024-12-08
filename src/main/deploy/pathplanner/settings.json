@@ -1,21 +1,23 @@
 {
-  "robotWidth": 0.9,
-  "robotLength": 0.9,
+  "robotWidth": 0.762,
+  "robotLength": 0.762,
   "holonomicMode": true,
-  "pathFolders": [],
+  "pathFolders": [
+    "New Folder"
+  ],
   "autoFolders": [],
   "defaultMaxVel": 4.5,
-  "defaultMaxAccel": 3.0,
+  "defaultMaxAccel": 2.75,
   "defaultMaxAngVel": 540.0,
-  "defaultMaxAngAccel": 720.0,
-  "robotMass": 75.0,
-  "robotMOI": 6.883,
-  "robotWheelbase": 0.559,
-  "robotTrackwidth": 0.559,
-  "driveWheelRadius": 0.055,
-  "driveGearing": 6.1,
-  "maxDriveSpeed": 4.7,
-  "driveMotorType": "krakenX60FOC",
-  "driveCurrentLimit": 98.0,
-  "wheelCOF": 1.7
+  "defaultMaxAngAccel": 540.0,
+  "robotMass": 30.0,
+  "robotMOI": 5.0,
+  "robotWheelbase": 0.476,
+  "robotTrackwidth": 0.476,
+  "driveWheelRadius": 0.0487,
+  "driveGearing": 5.3571,
+  "maxDriveSpeed": 5.25,
+  "driveMotorType": "krakenX60",
+  "driveCurrentLimit": 45.0,
+  "wheelCOF": 1.1
 }
