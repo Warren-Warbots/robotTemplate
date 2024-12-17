@@ -58,7 +58,7 @@ public class Autos {
 
         SmartDashboard.putData(autoChooser);
         FollowPathCommand.warmupCommand().schedule();
-        PathfindingCommand.warmupCommand().schedule();
+        // PathfindingCommand.warmupCommand().schedule();
 
         selectedAuto = new PathPlannerAuto("DoNothing");
     }
