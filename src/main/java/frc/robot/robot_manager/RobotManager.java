@@ -6,6 +6,7 @@ package frc.robot.robot_manager;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -20,6 +21,7 @@ public class RobotManager extends SubsystemBase {
     public RobotState lastState = RobotState.STOW_NO_GP;
     public SwerveSubsystem swerve;
     private LightsSubsystem lights;
+    private double timestampAtSetState = Timer.getFPGATimestamp();
 
     public RobotManager(SwerveSubsystem swerve, LightsSubsystem lights) {
         this.swerve = swerve;
@@ -27,7 +29,10 @@ public class RobotManager extends SubsystemBase {
         
     }
 
+    
     public void setState(RobotState state) {
+        DogLog.log("Robot/state",state);
+        timestampAtSetState=Timer.getFPGATimestamp();
         this.state = state;
     }
     public Command setModeCommand(RobotState state){
@@ -35,7 +40,7 @@ public class RobotManager extends SubsystemBase {
     }
     public Command setModeCommand(RobotState state,boolean isAuto) {
       // in auto, we want the snap command to end as soon as we are in a non snap state
-      // in teleop, we want it to stick around (aka dont run disable snap) so that the snap doesnt cancel itself if the driver doesnt tell it to do something else
+      // in teleop, we want it to stick around (aka dont run disable snap) so that the snap doesnt cancel itself until the driver says otherwise
       if (state.isSnapState()){
         return Commands.runOnce(()-> setState(state)).andThen(swerve.enableSnap());
       } else if (isAuto) {
@@ -53,8 +58,9 @@ public class RobotManager extends SubsystemBase {
 
   @Override
   public void periodic() {
-    DogLog.log("Robot/state",state);
     
+    double timeInState = Timer.getFPGATimestamp()-timestampAtSetState;
+
     switch (state){
       case SPEAKER_SHOOTING:
         swerve.setSnapAngle(FieldUtil.getFieldRelativeAngleToPose(swerve.getPose(), FieldUtil.getSpeakerPose()));
@@ -67,12 +73,17 @@ public class RobotManager extends SubsystemBase {
         swerve.setSnapAngle(FieldUtil.getAmpAngle());
         break;
       case INTAKING:
+      //  example of how to use a timer to go to a new state
+        if (timeInState>10){
+          setState(RobotState.STOW_NO_GP); //dont set state=something, always use the setState func
+        }
         break;
       default:
         break;
       
     }
     if (lastState!=state){
+      
       lights.setColor(state.getLedColor(), state.getBlinkPattern());
       swerve.setRobotTopSpeeds(state.getRobotTopSpeedPercent(),state.getRobotTopRotationalSpeedPercent());
     }
