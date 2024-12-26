@@ -64,8 +64,6 @@ public class ExampleSubsystem extends SubsystemBase {
           state = ExampleState.STOW;
         }
         break;
-      default:
-        break;
 
     }
     lastState = state;

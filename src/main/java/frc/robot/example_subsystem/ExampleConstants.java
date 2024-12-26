@@ -9,7 +9,7 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 
-import frc.robot.constants.Constants;
+import frc.robot.Constants;
 
 /** Add your docs here. */
 public class ExampleConstants {
