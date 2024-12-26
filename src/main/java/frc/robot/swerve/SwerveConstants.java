@@ -18,7 +18,7 @@ public class SwerveConstants {
 
 
 //physical constants, get by driving robot
-public static final double maxSpeed = TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(); 
+public static final double maxSpeed = TunerConstants.kSpeedAt12Volts.baseUnitMagnitude();  //tune this in the Tuner Constants file
 public static final double maxRotSpeed = 7.0; // rad/second, should probably tune this?
 
 //driver configs - driver should tune these
@@ -50,9 +50,6 @@ public static final PhoenixPIDController maintainHeadingController = new Phoenix
 
 public static final double snapTolerance = 0.5; //radians
 public static final double maintainHeadingTolerance = 0.5; //radians - this does nothing
-
-public static final double snapEndThreshold = 0.05;// if rotation input > this, cancel snap
-
 
 
 

@@ -61,6 +61,22 @@ public class RobotManager extends SubsystemBase {
     
     double timeInState = Timer.getFPGATimestamp()-timestampAtSetState;
 
+
+    if (lastState!=state){
+      // this stuff runs once the first time you go into a state, if you need something to update continuously, like aiming the drivebase based on position, put it in the main state machine
+      // if you need it to happen once, put it here
+      lights.setColor(state.getLedColor(), state.getBlinkPattern());
+      swerve.setRobotTopSpeeds(state.getRobotTopSpeedPercent(),state.getRobotTopRotationalSpeedPercent());
+      switch (state) {
+        case AMP:
+            swerve.setSnapAngle(FieldUtil.getAmpAngle());
+          break;
+        default:
+          break;
+      }
+
+    }
+
     switch (state){
       case SPEAKER_SHOOTING:
         swerve.setSnapAngle(FieldUtil.getFieldRelativeAngleToPose(swerve.getPose(), FieldUtil.getSpeakerPose()));
@@ -70,7 +86,7 @@ public class RobotManager extends SubsystemBase {
       case STOW_NO_GP:
         break;
       case AMP:
-        swerve.setSnapAngle(FieldUtil.getAmpAngle());
+
         break;
       case INTAKING:
       //  example of how to use a timer to go to a new state
@@ -82,11 +98,7 @@ public class RobotManager extends SubsystemBase {
         break;
       
     }
-    if (lastState!=state){
-      
-      lights.setColor(state.getLedColor(), state.getBlinkPattern());
-      swerve.setRobotTopSpeeds(state.getRobotTopSpeedPercent(),state.getRobotTopRotationalSpeedPercent());
-    }
+    
     lastState = state;
 
   }

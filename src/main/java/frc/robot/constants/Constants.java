@@ -12,11 +12,11 @@ public class Constants {
 
     public static String CANBUS_NAME = "rio";
 
-    private static final ClosedLoopRampsConfigs CLOSED_LOOP_RAMP = new ClosedLoopRampsConfigs()
+    public static final ClosedLoopRampsConfigs CLOSED_LOOP_RAMP = new ClosedLoopRampsConfigs()
             .withDutyCycleClosedLoopRampPeriod(0.04)
             .withTorqueClosedLoopRampPeriod(0.04)
             .withVoltageClosedLoopRampPeriod(0.04);
-    private static final OpenLoopRampsConfigs OPEN_LOOP_RAMP = new OpenLoopRampsConfigs()
+    public static final OpenLoopRampsConfigs OPEN_LOOP_RAMP = new OpenLoopRampsConfigs()
             .withDutyCycleOpenLoopRampPeriod(0.04)
             .withTorqueOpenLoopRampPeriod(0.04)
             .withVoltageOpenLoopRampPeriod(0.04);

@@ -222,7 +222,7 @@ public class SwerveSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
 
     if (SwerveConstants.useLimelight) {
-      LimelightHelpers.SetRobotOrientation("", swerveDriveState.Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+      LimelightHelpers.SetRobotOrientation("", swerveDriveState.Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0); //TODO pass more data
       addVisionPosesToPoseEstimator(true);
     }
     swerveDriveState = drivetrain.getState(); // not sure if this should be before or after vision pose est
@@ -262,9 +262,6 @@ public class SwerveSubsystem extends SubsystemBase {
           }
 
       DogLog.log("Swerve/TeleopDesiredSpeeds", driverDesiredSpeeds);
-      DogLog.log("Swerve/lastMaintainHeadingAngle",lastMaintainHeadingAngle.orElse(new Rotation2d()));
-      DogLog.log("Swerve/lastMaintainHeadingAngleisEmpty",lastMaintainHeadingAngle.isEmpty());
-      // DogLog.log("Swerve/diff",Timer.getFPGATimestamp()-highSpeedLastTime );
       switch (state) {
         case NO_SNAP:
           if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.rightXDeadband 
@@ -276,11 +273,9 @@ public class SwerveSubsystem extends SubsystemBase {
                 .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
                 .withRotationalRate(
                     driverDesiredSpeeds.omegaRadiansPerSecond * getRobotRotationSpeed()));
-            DogLog.log("Swerve/maintainHeadingPID", false);
             lastMaintainHeadingAngle = Optional.of(swerveDriveState.Pose.getRotation());
             
           } else {
-            DogLog.log("Swerve/maintainHeadingPID", true);
             drivetrain.setControl(driveMaintainHeading
               .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
               .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
