@@ -15,9 +15,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.autos.Autos;
-import frc.robot.constants.Constants;
 import frc.robot.lights.LightsSubsystem;
 import frc.robot.robot_manager.RobotManager;
 import frc.robot.robot_manager.RobotState;
@@ -38,7 +36,7 @@ public class Robot extends TimedRobot {
     DogLog.setOptions(
         new DogLogOptions().withCaptureNt(false)
             .withCaptureDs(true)
-            .withNtPublish(!Constants.IS_COMP));
+            .withNtPublish(!Constants.IS_AT_COMP));
     configureButtonBindings();
   }
 

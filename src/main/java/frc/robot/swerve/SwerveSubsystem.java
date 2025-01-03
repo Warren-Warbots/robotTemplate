@@ -36,8 +36,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-
-import frc.robot.generated.TunerConstants;
 import frc.robot.util.ControllerHelpers;
 import frc.robot.util.FmsUtil;
 import frc.robot.util.LimelightHelpers;
@@ -73,22 +71,27 @@ public class SwerveSubsystem extends SubsystemBase {
   
   /*
    * TODO
-   * current limits
-   * open/closed loop ramps
-   * 
-   * 
+   * drive to pose command
+   * make robust zero drivetrain command 
+   * try out poinhole model localization
+   * dont collect vision poses while moving
+   * move swerve requests to constants?
    * 
    */
 
   public SwerveSubsystem(CommandXboxController driverXboxController) {
-    drivetrain = new SwerveDrivetrain(TunerConstants.DrivetrainConstants, TunerConstants.FrontLeft,
-        TunerConstants.FrontRight, TunerConstants.BackLeft, TunerConstants.BackRight);
+    drivetrain = new SwerveDrivetrain(SwerveConstants.swerveDrivetrainConstants,
+    SwerveConstants.FrontLeft,
+    SwerveConstants.FrontRight,
+    SwerveConstants.BackLeft,
+    SwerveConstants.BackRight);
+
     drive_robot_rel = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     drive_no_snap = new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity)
-        .withDeadband(0.05 * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude())
+        .withDeadband(0.05 * SwerveConstants.maxSpeed)
         .withRotationalDeadband(0.01 * SwerveConstants.maxRotSpeed);
     drive_snap = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.Velocity)
-        .withDeadband(0.05 * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude())
+        .withDeadband(0.05 * SwerveConstants.maxSpeed)
         .withRotationalDeadband(0.05 * SwerveConstants.maxRotSpeed);
     drive_snap.HeadingController = SwerveConstants.snapController;
     drive_snap.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
@@ -96,7 +99,7 @@ public class SwerveSubsystem extends SubsystemBase {
     
 
     driveMaintainHeading = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.Velocity)
-    .withDeadband(0.05 * TunerConstants.kSpeedAt12Volts.baseUnitMagnitude())
+    .withDeadband(0.05 * SwerveConstants.maxSpeed)
     .withRotationalDeadband(0.05 * SwerveConstants.maxRotSpeed);
     driveMaintainHeading.HeadingController = SwerveConstants.maintainHeadingController;
     driveMaintainHeading.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
@@ -222,7 +225,7 @@ public class SwerveSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
 
     if (SwerveConstants.useLimelight) {
-      LimelightHelpers.SetRobotOrientation("", swerveDriveState.Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+      LimelightHelpers.SetRobotOrientation("", swerveDriveState.Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0); //TODO pass more data
       addVisionPosesToPoseEstimator(true);
     }
     swerveDriveState = drivetrain.getState(); // not sure if this should be before or after vision pose est
@@ -262,9 +265,6 @@ public class SwerveSubsystem extends SubsystemBase {
           }
 
       DogLog.log("Swerve/TeleopDesiredSpeeds", driverDesiredSpeeds);
-      DogLog.log("Swerve/lastMaintainHeadingAngle",lastMaintainHeadingAngle.orElse(new Rotation2d()));
-      DogLog.log("Swerve/lastMaintainHeadingAngleisEmpty",lastMaintainHeadingAngle.isEmpty());
-      // DogLog.log("Swerve/diff",Timer.getFPGATimestamp()-highSpeedLastTime );
       switch (state) {
         case NO_SNAP:
           if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.rightXDeadband 
@@ -276,11 +276,9 @@ public class SwerveSubsystem extends SubsystemBase {
                 .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
                 .withRotationalRate(
                     driverDesiredSpeeds.omegaRadiansPerSecond * getRobotRotationSpeed()));
-            DogLog.log("Swerve/maintainHeadingPID", false);
             lastMaintainHeadingAngle = Optional.of(swerveDriveState.Pose.getRotation());
             
           } else {
-            DogLog.log("Swerve/maintainHeadingPID", true);
             drivetrain.setControl(driveMaintainHeading
               .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
               .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
@@ -446,7 +444,7 @@ public class SwerveSubsystem extends SubsystemBase {
                     double arc_len_traveled = distances[i] * Units.degreesToRadians(degrees_traveled);
 
                     double rotations = drivetrain.getModule(i).getDriveMotor().getRotorPosition(false)
-                        .getValueAsDouble() / TunerConstants.kDriveGearRatio; // latency comp in the future? or just
+                        .getValueAsDouble() / SwerveConstants.driveGearRatio; // latency comp in the future? or just
                                                                               // make sure gyro value is pulled same as
                                                                               // drive module
                     double est_circum = arc_len_traveled / rotations;
