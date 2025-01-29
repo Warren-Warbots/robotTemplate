@@ -4,6 +4,7 @@
 
 package frc.robot.swerve;
 
+import java.lang.reflect.Field;
 import java.util.Optional;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -37,8 +38,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.util.ControllerHelpers;
+import frc.robot.util.FieldUtil;
 import frc.robot.util.FmsUtil;
 import frc.robot.util.LimelightHelpers;
+import frc.robot.util.ReefUtil;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
 
 public class SwerveSubsystem extends SubsystemBase {
@@ -294,6 +297,8 @@ public class SwerveSubsystem extends SubsystemBase {
               .withTargetDirection(this.snapAngle));
           break;
         case CALIBRATION:
+          Pose2d selectedReefFace = FieldUtil.getReef().A().getLeft();
+          Pose2d desiredPose = FieldUtil.addRobotOffset(selectedReefFace);
           // do nothing
           break;
 
