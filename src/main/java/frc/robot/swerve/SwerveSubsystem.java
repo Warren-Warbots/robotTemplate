@@ -296,9 +296,37 @@ public class SwerveSubsystem extends SubsystemBase {
               .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
               .withTargetDirection(this.snapAngle));
           break;
+
+        
         case CALIBRATION:
           Pose2d selectedReefFace = FieldUtil.getReef().A().getLeft();
           Pose2d desiredPose = FieldUtil.addRobotOffset(selectedReefFace);
+          Translation2d driverTranslation = new Translation2d(driverDesiredSpeeds.vxMetersPerSecond, driverDesiredSpeeds.vyMetersPerSecond);
+  
+          Translation2d[] reefRelativeVectors = {(new Translation2d(1,0)).rotateBy(selectedReefFace.getRotation()),
+          (new Translation2d(-1,0)).rotateBy(selectedReefFace.getRotation()),
+          (new Translation2d(0,1)).rotateBy(selectedReefFace.getRotation()),
+           (new Translation2d(0,-1)).rotateBy(selectedReefFace.getRotation())};
+          
+
+          //this code goes through each direction (forward,backward,left,right) from the perspective of somone looking at the reef
+          // for each of these directions, whichever one is closest to the drivers chosen input is the direction we choose to move in
+          double largestDotProduct =-10;
+          int directionIndex = -1;
+          for (int i =0;i<4;i++){
+            double currDotProd = reefRelativeVectors[i].toVector().dot(driverTranslation.toVector());
+            if (largestDotProduct<currDotProd){
+              largestDotProduct=currDotProd;
+              directionIndex=i;
+            }
+          }
+          Translation2d scaledDesiredMovementVector = reefRelativeVectors[directionIndex].times(largestDotProduct);
+
+
+          drivetrain.setControl(drive_snap
+              .withVelocityX( scaledDesiredMovementVector.getX()* getRobotTopSpeed())
+              .withVelocityY(scaledDesiredMovementVector.getY() * getRobotTopSpeed())
+              .withTargetDirection(selectedReefFace.getRotation()));
           // do nothing
           break;
 

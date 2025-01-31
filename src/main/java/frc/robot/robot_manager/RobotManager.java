@@ -68,9 +68,6 @@ public class RobotManager extends SubsystemBase {
       lights.setColor(state.getLedColor(), state.getBlinkPattern());
       swerve.setRobotTopSpeeds(state.getRobotTopSpeedPercent(),state.getRobotTopRotationalSpeedPercent());
       switch (state) {
-        case AMP:
-            swerve.setSnapAngle(FieldUtil.getAmpAngle());
-          break;
         default:
           break;
       }
@@ -78,9 +75,6 @@ public class RobotManager extends SubsystemBase {
     }
 
     switch (state){
-      case SPEAKER_SHOOTING:
-        swerve.setSnapAngle(FieldUtil.getFieldRelativeAngleToPose(swerve.getPose(), FieldUtil.getSpeakerPose()));
-        break;
       case STOW_HAS_GP:
         break;
       case STOW_NO_GP:
