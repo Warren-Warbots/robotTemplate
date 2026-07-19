@@ -1,0 +1,94 @@
+package frc.robot.simulation;
+
+import java.util.ArrayList;
+
+import com.ctre.phoenix6.Utils;
+
+/**
+ * Manages physics simulation for CTRE products.
+ */
+
+// in here is gonna be the elevator and pivot simulation
+public class PhysicsSim {
+    private static final PhysicsSim PhysicsSim = new PhysicsSim();
+
+    /**
+     * Gets the robot simulator instance.
+     */
+    public static PhysicsSim getInstance() {
+        return PhysicsSim;
+    }
+
+    /**
+     * Adds a TalonFX controller to the simulator.
+     * 
+     * @param talonFX
+     *                     The TalonFX device
+     * @param rotorInertia
+     *                     Rotational Inertia of the mechanism at the rotor
+     */
+
+    public void addSimProfile(TalonFXSimProfile talonFXSimProfile) {
+        if (talonFXSimProfile != null) {
+            _simProfiles.add(talonFXSimProfile);
+        }
+
+    }
+
+    /**
+     * Runs the simulator:
+     * - enable the robot
+     * - simulate sensors
+     */
+
+    public void run() {
+        // Simulate devices
+        for (SimProfile simProfile : _simProfiles) {
+            simProfile.run();
+
+            // simProfile.runPivot();
+            // simProfile.runGroundPivot();
+        }
+        // System.out.println("Number of SimProfiles: " + _simProfiles.size()); to check
+        // the # of simprofiles (2)
+    }
+
+    private final ArrayList<SimProfile> _simProfiles = new ArrayList<SimProfile>();
+
+    /**
+     * Holds information about a simulated device.
+     */
+    static class SimProfile {
+        private double _lastTime;
+        private boolean _running = false;
+
+        /**
+         * Runs the simulation profile.
+         * Implemented by device-specific profiles.
+         */
+
+        public void run() {
+        }
+
+        public void runGroundPivot() {
+        }
+
+        /**
+         * Returns the time since last call, in seconds.
+         */
+        protected double getPeriod() {
+            // set the start time if not yet running
+            if (!_running) {
+                _lastTime = Utils.getCurrentTimeSeconds();
+                _running = true;
+            }
+
+            double now = Utils.getCurrentTimeSeconds();
+            final double period = now - _lastTime;
+            _lastTime = now;
+
+            return period;
+        }
+    }
+
+}

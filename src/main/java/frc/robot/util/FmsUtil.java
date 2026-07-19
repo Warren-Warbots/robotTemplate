@@ -8,12 +8,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class FmsUtil {
-    
+
     public static boolean isRedAlliance() {
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
 
         return alliance == Alliance.Red;
     }
-
 
 }

@@ -3,12 +3,11 @@ package frc.robot.util;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 
 public class FieldUtil {
 
-  public static Pose2d getExamplePose(){
-    return  FmsUtil.isRedAlliance() ? new Pose2d(1.0, 1.0, Rotation2d.kZero) : new Pose2d(6, 1, Rotation2d.k180deg);
+  public static Pose2d getExamplePose() {
+    return FmsUtil.isRedAlliance() ? new Pose2d(1.0, 1.0, Rotation2d.kZero) : new Pose2d(6, 1, Rotation2d.k180deg);
   }
 
   public static double angleBetweenRotation2ds(Rotation2d a, Rotation2d b) {

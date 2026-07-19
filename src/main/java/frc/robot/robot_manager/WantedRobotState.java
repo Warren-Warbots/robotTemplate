@@ -2,12 +2,12 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.swerve;
+package frc.robot.robot_manager;
 
-/** Enum representing various swerve states. */
-public enum SwerveState {
-    
-    TELEOP_DRIVE,
-    CALIBRATION, DRIVE_TO_POSE, SNAP, SNAP_POINT;
-
+/** Add your docs here. */
+public enum WantedRobotState {
+    STOW,
+    INTAKE,
+    AUTO_SCORE_L4,
+    DRIVE_WITH_VELOCITY;
 }

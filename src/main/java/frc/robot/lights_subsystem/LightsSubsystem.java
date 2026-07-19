@@ -7,41 +7,41 @@ package frc.robot.lights_subsystem;
 import com.ctre.phoenix6.hardware.CANdle;
 import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.robot_manager.RobotState;
+import frc.robot.Constants;
+import frc.robot.robot_manager.CurrentRobotState;
 
-public class LightsSubsystem extends SubsystemBase {
-  private RobotState state;
+public class LightsSubsystem {
+  private CurrentRobotState state;
   private double timestampAtSetState = Timer.getFPGATimestamp();
   CANdle candle;
+
   public LightsSubsystem() {
-    candle = new CANdle(LightsConstants.candleId);
+    candle = new CANdle(Constants.lightsId);
     candle.getConfigurator().apply(LightsConstants.candleConfig);
   }
 
-  public void setRobotState(RobotState robotState){
-    state=robotState;
+  public void setLightState(CurrentRobotState robotState) {
+    state = robotState;
   }
 
-  @Override
   public void periodic() {
     // This is where your state machine lives
     double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
-    DogLog.log("LightsSubsystem/state", state);
+    DogLog.log("LightsSubsystem/state", state.name());
 
     switch (state) {
 
-      case STOW_HAS_GP:
+      case STOW:
         candle.setControl(LightsConstants.blue);
         break;
-      case STOW_NO_GP:
+      case INTAKE:
         candle.setControl(LightsConstants.pink);
         break;
-      case STATE:
-      case STATE1:
-      case STATE2:
-      case STATE3:
+      case PREPARE_SCORE_L4:
         candle.setControl(LightsConstants.rainbow);
+        break;
+      case SCORE_L4:
+        candle.setControl(LightsConstants.white);
         break;
 
     }
