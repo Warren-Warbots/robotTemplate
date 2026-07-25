@@ -7,7 +7,7 @@ package frc.robot.example_intake_subsystem;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import dev.doglog.DogLog;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import frc.robot.util.TalonFxUtils;
 
@@ -16,8 +16,6 @@ public class IntakeSubsystem {
 
   public WantedState wantedState = WantedState.STOP;
   private SystemState systemState = SystemState.STOPPED;
-
-  private double timestampAtSetState = Timer.getFPGATimestamp();
 
   TalonFX intakeMotor;
   CANrange canrange = new CANrange(Constants.intakeCANrangeId);
@@ -79,6 +77,9 @@ public class IntakeSubsystem {
       case INTAKING -> intakeMotor.setControl(IntakeConstants.intakeVoltageOut.withOutput(4.0));
       case OUTTAKING -> intakeMotor.setControl(IntakeConstants.intakeVoltageOut.withOutput(-4.0));
       case STOPPED -> intakeMotor.setControl(IntakeConstants.intakeVoltageOut.withOutput(0.0));
+      // if you add a state and forget a case here, this makes it scream in the
+      // Driver Station instead of silently doing nothing
+      default -> DriverStation.reportError("IntakeSubsystem has no behavior for state " + systemState, false);
     }
   }
 
@@ -93,7 +94,6 @@ public class IntakeSubsystem {
     collectInputs();
     systemState = handleStateTransitions();
     applyStates();
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
   }
 
 }

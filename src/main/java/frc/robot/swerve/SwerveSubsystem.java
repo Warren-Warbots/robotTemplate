@@ -163,6 +163,9 @@ public class SwerveSubsystem {
             case DRIVE_WITH_VELOCITY -> driveWithVelocity();
             case SNAP -> snap();
             case SNAP_POINT -> snapPoint();
+            // if you add a state and forget a case here, this makes it scream in the
+            // Driver Station instead of silently doing nothing
+            default -> DriverStation.reportError("SwerveSubsystem has no behavior for state " + systemState, false);
         }
     }
 

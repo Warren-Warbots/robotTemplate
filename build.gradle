@@ -1,6 +1,26 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
+    id "com.diffplug.spotless" version "6.25.0"
+}
+
+// Code formatter - run "./gradlew spotlessApply" to format all java files.
+// enforceCheck false means formatting NEVER fails or blocks a build.
+spotless {
+    enforceCheck false
+    java {
+        target fileTree('.') {
+            include '**/*.java'
+            // don't reformat generated or vendored files - it makes them harder
+            // to regenerate/update later
+            exclude '**/build/**', '**/build-*/**', '**/generated/**', '**/LimelightHelpers.java'
+        }
+        toggleOffOn()
+        googleJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
 java {

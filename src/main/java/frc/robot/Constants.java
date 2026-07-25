@@ -6,12 +6,15 @@ import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 public class Constants {
         public static boolean IS_AT_COMP = false;
 
-        public static final String BETA_SERIAL_NUMBER = "-"; // 0329F366
+        // every roboRIO has a unique serial number, so the code can detect which
+        // robot it is running on. put the BETA (practice) bot's serial here -
+        // update it whenever the beta bot gets a new RIO.
+        public static final String BETA_SERIAL_NUMBER = "0329F366";
         public static final String SERIAL_NUMBER = System.getenv("serialnum");
 
-        public static final boolean IS_COMP_BOT = true;
-
-        public static String CANBUS_NAME = "rio";
+        // any RIO that is not the beta bot counts as the comp bot (this includes
+        // simulation, where there is no serial number at all)
+        public static final boolean IS_COMP_BOT = !BETA_SERIAL_NUMBER.equals(SERIAL_NUMBER);
 
         public static final ClosedLoopRampsConfigs CLOSED_LOOP_RAMP = new ClosedLoopRampsConfigs()
                         .withDutyCycleClosedLoopRampPeriod(0.04)

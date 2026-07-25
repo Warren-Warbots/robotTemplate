@@ -6,6 +6,7 @@ package frc.robot.robot_manager;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.example_pivator_subsystem.PivatorSubsystem;
 import frc.robot.autos.ArcFollower;
@@ -23,9 +24,10 @@ public class RobotManager {
   public LightsSubsystem lights;
   public PivatorSubsystem pivot;
   public IntakeSubsystem intake;
-  private double timestampAtSetState = Timer.getFPGATimestamp();
 
   public boolean hasGP = false;
+
+  private Timer scoreTimer = new Timer();
 
   // Managed Path Following
   private PathFollower currentPathFollower = null;
@@ -43,7 +45,6 @@ public class RobotManager {
 
   public void setWantedRobotState(WantedRobotState state) {
     DogLog.log("Robot/wantedState", state.name());
-    timestampAtSetState = Timer.getFPGATimestamp();
     this.wantedState = state;
 
   }
@@ -113,7 +114,6 @@ public class RobotManager {
   }
 
   public void periodic() {
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
     collectInputs();
     currentState = handleStateTransitions();
     applyStates();
@@ -158,8 +158,10 @@ public class RobotManager {
       case PREPARE_SCORE_L4 -> prepareScoreL4();
       case SCORE_L4 -> scoreL4();
       case DRIVE_WITH_VELOCITY -> driveWithVelocity();
+      // if you add a state and forget a case here, this makes it scream in the
+      // Driver Station instead of silently doing nothing
+      default -> DriverStation.reportError("RobotManager has no behavior for state " + currentState, false);
     }
-    ;
   }
 
   private void stow() {
@@ -182,6 +184,10 @@ public class RobotManager {
     pivot.setWantedState(PivatorSubsystem.WantedState.LVL4);
     lights.setWantedState(LightsSubsystem.WantedState.PREPARING);
     startDriveToPose(FieldUtil.getExamplePose(), 0.05, 3.0, 1, 2.0);
+    // restart the timer every loop while preparing - the moment we switch to
+    // SCORE_L4 this stops running, so the timer measures how long we've been
+    // scoring. this is how you time things in state logic.
+    scoreTimer.restart();
     // transition to actively scoring is handled in handleStateTransitions()
   }
 
@@ -189,7 +195,9 @@ public class RobotManager {
     intake.setWantedState(IntakeSubsystem.WantedState.OUTTAKE);
     pivot.setWantedState(PivatorSubsystem.WantedState.LVL4);
     lights.setWantedState(LightsSubsystem.WantedState.SCORING);
-    if (!hasGP) {
+    // score for at least half a second before stowing, even if the sensor says
+    // the game piece already left (sensors can flicker)
+    if (!hasGP && scoreTimer.hasElapsed(0.5)) {
       setWantedRobotState(WantedRobotState.STOW);
     }
   }

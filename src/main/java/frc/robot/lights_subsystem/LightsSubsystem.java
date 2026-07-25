@@ -6,6 +6,7 @@ package frc.robot.lights_subsystem;
 
 import com.ctre.phoenix6.hardware.CANdle;
 import dev.doglog.DogLog;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
 public class LightsSubsystem {
@@ -73,6 +74,9 @@ public class LightsSubsystem {
       case PREPARING -> candle.setControl(LightsConstants.rainbow);
       case SCORING -> candle.setControl(LightsConstants.white);
       case AUTO_DRIVING -> candle.setControl(LightsConstants.green);
+      // if you add a state and forget a case here, this makes it scream in the
+      // Driver Station instead of silently doing nothing
+      default -> DriverStation.reportError("LightsSubsystem has no behavior for state " + systemState, false);
     }
   }
 

@@ -10,7 +10,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import frc.robot.simulation.SimMech;
 import frc.robot.simulation.TalonFXSimProfile;
@@ -20,8 +20,6 @@ public class PivatorSubsystem {
   /** Creates a new PivatorSubsystem. */
   public WantedState wantedState = WantedState.STOW;
   private SystemState systemState = SystemState.STOWED;
-
-  private double timestampAtSetState = Timer.getFPGATimestamp();
 
   private final SimMech simMech = new SimMech();
   public static final double rotorInertia = 0.02;
@@ -107,6 +105,9 @@ public class PivatorSubsystem {
     switch (systemState) {
       case STOWED -> stow();
       case LVL4 -> scoreLVL4();
+      // if you add a state and forget a case here, this makes it scream in the
+      // Driver Station instead of silently doing nothing
+      default -> DriverStation.reportError("PivatorSubsystem has no behavior for state " + systemState, false);
     }
   }
 
@@ -121,7 +122,6 @@ public class PivatorSubsystem {
     collectInputs();
     systemState = handleStateTransition();
     applyStates();
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
     // clamp every position command so a bad setpoint can't drive the mechanism
     // past its physical limits
     pivotMotor.setControl(PivatorConstants.pivotPositionVoltage.withPosition(
