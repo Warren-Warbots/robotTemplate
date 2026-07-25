@@ -6,13 +6,17 @@ package frc.robot.lights_subsystem;
 
 import com.ctre.phoenix6.hardware.CANdle;
 import dev.doglog.DogLog;
-import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
-import frc.robot.robot_manager.CurrentRobotState;
 
 public class LightsSubsystem {
-  private CurrentRobotState state;
-  private double timestampAtSetState = Timer.getFPGATimestamp();
+  /**
+   * Shows robot status on the LED strip. This is the simplest example of the
+   * subsystem pattern: no sensors, no closed loop, one output device.
+   */
+
+  public WantedState wantedState = WantedState.IDLE;
+  private SystemState systemState = SystemState.IDLE;
+
   CANdle candle;
 
   public LightsSubsystem() {
@@ -20,32 +24,62 @@ public class LightsSubsystem {
     candle.getConfigurator().apply(LightsConstants.candleConfig);
   }
 
-  public void setLightState(CurrentRobotState robotState) {
-    state = robotState;
+  // states are named for what the robot is doing, the color for each one is
+  // picked in applyStates()
+  public enum WantedState {
+    IDLE,
+    INTAKING,
+    PREPARING,
+    SCORING,
+    AUTO_DRIVING;
+  }
+
+  private enum SystemState {
+    IDLE,
+    INTAKING,
+    PREPARING,
+    SCORING,
+    AUTO_DRIVING;
+  }
+
+  public void setWantedState(WantedState wantedState) {
+    this.wantedState = wantedState;
+
+  }
+
+  private void collectInputs() {
+    // this is where logging goes
+    DogLog.log("LightsSubsystem/wantedState", wantedState.name());
+    DogLog.log("LightsSubsystem/systemState", systemState.name());
+  }
+
+  // this handles simple, 1:1 transitions (see robot manager for more complex
+  // transitions)
+  private SystemState handleStateTransitions() {
+    return switch (wantedState) {
+      case IDLE -> SystemState.IDLE;
+      case INTAKING -> SystemState.INTAKING;
+      case PREPARING -> SystemState.PREPARING;
+      case SCORING -> SystemState.SCORING;
+      case AUTO_DRIVING -> SystemState.AUTO_DRIVING;
+    };
+  }
+
+  // this applies light patterns based on systemState
+  private void applyStates() {
+    switch (systemState) {
+      case IDLE -> candle.setControl(LightsConstants.blue);
+      case INTAKING -> candle.setControl(LightsConstants.pink);
+      case PREPARING -> candle.setControl(LightsConstants.rainbow);
+      case SCORING -> candle.setControl(LightsConstants.white);
+      case AUTO_DRIVING -> candle.setControl(LightsConstants.green);
+    }
   }
 
   public void periodic() {
-    // This is where your state machine lives
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
-    DogLog.log("LightsSubsystem/state", state.name());
-
-    switch (state) {
-
-      case STOW:
-        candle.setControl(LightsConstants.blue);
-        break;
-      case INTAKE:
-        candle.setControl(LightsConstants.pink);
-        break;
-      case PREPARE_SCORE_L4:
-        candle.setControl(LightsConstants.rainbow);
-        break;
-      case SCORE_L4:
-        candle.setControl(LightsConstants.white);
-        break;
-
-    }
-
+    collectInputs();
+    systemState = handleStateTransitions();
+    applyStates();
   }
 
 }

@@ -26,6 +26,7 @@ public class LightsConstants {
                         .withColor(new RGBWColor(Color.kMidnightBlue));
         public static SolidColor white = new SolidColor(START_LED, END_LED).withColor(new RGBWColor(Color.kWhite));
         public static SolidColor pink = new SolidColor(START_LED, END_LED).withColor(new RGBWColor(Color.kDarkRed));
+        public static SolidColor green = new SolidColor(START_LED, END_LED).withColor(new RGBWColor(Color.kGreen));
 
         public static RainbowAnimation rainbow = new RainbowAnimation(START_LED, END_LED)
                         .withDirection(AnimationDirectionValue.Forward);
