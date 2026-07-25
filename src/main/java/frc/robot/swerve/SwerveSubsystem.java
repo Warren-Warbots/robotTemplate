@@ -63,7 +63,6 @@ public class SwerveSubsystem {
     private Translation2d swerveCOR = new Translation2d(0, 0);
 
     public SwerveDriveState swerveDriveState = new SwerveDriveState();
-    public SwerveDriveState lastSwerveDriveState = new SwerveDriveState();
 
     private Matrix<N3, N1> stdDevs;
     private static final double kSimLoopPeriod = 0.005;
@@ -225,7 +224,11 @@ public class SwerveSubsystem {
         this.currTopRotationSpeedPercent = newTopRotationSpeed;
     }
 
-    /* need to add reset gyro method */
+    public void resetGyro() {
+        // zeroes the gyro heading (and odometry pose) - vision will correct the
+        // position once tags are seen
+        drivetrain.tareEverything();
+    }
 
     public void setSnapPoint(Translation2d snapPoint) {
         // sets the point to look at while in snap
@@ -322,15 +325,12 @@ public class SwerveSubsystem {
     }
 
     public void periodic() {
-        collectInputs();
-        systemState = handleStateTransitions();
-        applyStates();
-
+        // refresh pose/speeds before any control math runs, so this loop acts on
+        // current data
         swerveDriveState = drivetrain.getState();
-        lastSwerveDriveState = swerveDriveState;
-        swerveDriveState = drivetrain.getState();
-
         currentTime = Timer.getFPGATimestamp();
+
+        collectInputs();
 
         if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.rightXDeadband) {
             rotationJoystickLastTouched = currentTime;
@@ -344,6 +344,10 @@ public class SwerveSubsystem {
         if (robotSpeed > 1) {
             highSpeedLastTime = currentTime;
         }
+
+        systemState = handleStateTransitions();
+        applyStates();
+
         if (systemState != SystemState.TELEOP_DRIVE) {
             lastMaintainHeadingAngle = Optional.empty();
         }
