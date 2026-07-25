@@ -1,8 +1,12 @@
 package frc.robot.autos;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.robot_manager.RobotManager;
+import frc.robot.util.FieldUtil;
 import frc.robot.util.FmsUtil;
 
 import java.util.Arrays;
@@ -14,16 +18,15 @@ public class PathFollower {
     private double maxDriveVelocity = 2.5;
     private double maxRotateVelocity = 3.5;
     private double atGoalTolerance = 1.0;
-    private double timeout_s = 300;
+    // every path gets a timeout so a stuck path can't hang the rest of auto.
+    // use withTimeout() if a path needs more (or less) time than this.
+    private double timeout_s = 10;
     private boolean isContinuous = false;
     private boolean isMirrored = false;
 
     private int currentWaypointIndex = 0;
     private boolean hasStartedCurrentWaypoint = false;
-
-    // Field dimensions for flipping (2024/2026 standard)
-    private static final double FIELD_LENGTH = 16.541;
-    private static final double FIELD_WIDTH = 8.211;
+    private Timer timeoutTimer = new Timer();
 
     public PathFollower(RobotManager manager, Pose2d... waypoints) {
         this.manager = manager;
@@ -63,6 +66,8 @@ public class PathFollower {
     public void reset() {
         currentWaypointIndex = 0;
         hasStartedCurrentWaypoint = false;
+        timeoutTimer.stop();
+        timeoutTimer.reset();
     }
 
     /**
@@ -70,6 +75,15 @@ public class PathFollower {
      */
     public boolean run() {
         if (currentWaypointIndex >= waypoints.size()) {
+            return true;
+        }
+
+        // start() only does something the first time - the timer measures how
+        // long this whole path has been running
+        timeoutTimer.start();
+        if (timeoutTimer.hasElapsed(timeout_s)) {
+            DriverStation.reportError("PathFollower timed out after " + timeout_s + "s, skipping rest of path", false);
+            currentWaypointIndex = waypoints.size();
             return true;
         }
 
@@ -88,6 +102,10 @@ public class PathFollower {
             hasStartedCurrentWaypoint = false;
         }
 
+        DogLog.log("Autos/PathFollower/waypointIndex", currentWaypointIndex);
+        DogLog.log("Autos/PathFollower/targetPose", p);
+        DogLog.log("Autos/PathFollower/timeRunning", timeoutTimer.get());
+
         return currentWaypointIndex >= waypoints.size();
     }
 
@@ -97,12 +115,12 @@ public class PathFollower {
         Rotation2d rot = pose.getRotation();
 
         if (isMirrored) {
-            y = FIELD_WIDTH - y;
+            y = FieldUtil.FIELD_WIDTH - y;
             rot = Rotation2d.fromDegrees(-rot.getDegrees());
         }
 
         if (FmsUtil.isRedAlliance()) {
-            x = FIELD_LENGTH - x;
+            x = FieldUtil.FIELD_LENGTH - x;
             rot = Rotation2d.fromDegrees(180 - rot.getDegrees());
         }
 

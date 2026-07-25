@@ -6,6 +6,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 
 public class FieldUtil {
 
+  // field size in meters, used for mirroring and red-alliance flipping.
+  // UPDATE THESE EVERY SEASON from the game manual, and keep them in sync with
+  // the field image WarPath is calibrated to.
+  public static final double FIELD_LENGTH = 16.541;
+  public static final double FIELD_WIDTH = 8.211;
+
   public static Pose2d getExamplePose() {
     return FmsUtil.isRedAlliance() ? new Pose2d(1.0, 1.0, Rotation2d.kZero) : new Pose2d(6, 1, Rotation2d.k180deg);
   }

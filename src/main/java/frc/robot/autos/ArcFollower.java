@@ -3,9 +3,11 @@ package frc.robot.autos;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.robot_manager.RobotManager;
 import frc.robot.util.Circle;
+import frc.robot.util.FieldUtil;
 import frc.robot.util.FmsUtil;
 
 import java.util.ArrayList;
@@ -23,22 +25,29 @@ public class ArcFollower {
     private double addTurnDegrees = 0.0;
     private int addTurnPoints = 5;
 
-    private double timeout_s = 300;
+    // every arc gets a timeout so a stuck arc can't hang the rest of auto.
+    // use withTimeout() if an arc needs more (or less) time than this.
+    private double timeout_s = 10;
     private boolean isContinuous = false;
     private boolean turnClockwise = false;
     private boolean isMirrored = false;
-    private Pose2d p;
 
     private int currentWaypointIndex = 0;
     private boolean hasStartedCurrentWaypoint = false;
-
-    // Field dimensions for flipping (2024/2026 standard)
-    private static final double FIELD_LENGTH = 16.541;
-    private static final double FIELD_WIDTH = 8.211;
+    private Timer timeoutTimer = new Timer();
+    // the interpolated arc points get built on the first run() call, after all
+    // the withX() settings have been applied
+    private ArrayList<Pose2d> wayPointsInterpolated = new ArrayList<>();
 
     public ArcFollower(RobotManager manager, Pose2d... waypoints) {
         this.manager = manager;
         this.waypoints = Arrays.asList(waypoints);
+        if (waypoints.length < 3) {
+            DriverStation.reportError(
+                    "ArcFollower needs 3 waypoints (start, middle, end) but got " + waypoints.length
+                            + " - this arc will be skipped",
+                    false);
+        }
     }
 
     public ArcFollower withMaxVelocity(double vel) {
@@ -89,22 +98,24 @@ public class ArcFollower {
     public void reset() {
         currentWaypointIndex = 0;
         hasStartedCurrentWaypoint = false;
+        timeoutTimer.stop();
+        timeoutTimer.reset();
     }
 
-    /**
-     * Called continuously. Returns true when the entire path is complete.
-     */
-    public boolean run() {
-        ArrayList<Pose2d> wayPointsInterpolated = new ArrayList<>();
-        Circle c;
+    // builds the arc points in un-flipped (blue, un-mirrored) coordinates.
+    // mirroring/alliance flipping happens later in run(), through the same
+    // applyFlipping() that PathFollower uses, so the math here never needs to
+    // know about it.
+    private void buildInterpolatedPoints() {
         Rotation2d r = new Rotation2d();
         Translation2d startPoint = waypoints.get(0).getTranslation();
         Translation2d midPoint = waypoints.get(1).getTranslation();
         Translation2d endPoint = waypoints.get(2).getTranslation();
-        c = new Circle(startPoint,
+        Circle c = new Circle(startPoint,
                 midPoint,
                 endPoint);
         DogLog.log("Autos/Arc/center", c.getCenter());
+        DogLog.log("Autos/Arc/arcRadius", c.getRadius());
         Rotation2d startAngle = startPoint.minus(c.getCenter()).getAngle();
         Rotation2d midAngle = midPoint.minus(c.getCenter()).getAngle();
         Rotation2d endAngle = endPoint.minus(c.getCenter()).getAngle();
@@ -117,18 +128,14 @@ public class ArcFollower {
 
             Rotation2d thetaCenterToRobot = current;
             Rotation2d thetaDesiredP90 = new Rotation2d(thetaCenterToRobot.getCos(), thetaCenterToRobot.getSin());
-            Rotation2d thetaDesiredN90 = new Rotation2d(thetaCenterToRobot.getCos(), thetaCenterToRobot.getSin());
             if (turnClockwise) {
-                r = !isMirrored ? thetaDesiredP90.plus(Rotation2d.fromDegrees(90))
-                        : thetaDesiredP90.minus(Rotation2d.fromDegrees(90));
+                r = thetaDesiredP90.plus(Rotation2d.fromDegrees(90));
             } else {
-                r = !isMirrored ? thetaDesiredP90.minus(Rotation2d.fromDegrees(90))
-                        : thetaDesiredP90.plus(Rotation2d.fromDegrees(90));
+                r = thetaDesiredP90.minus(Rotation2d.fromDegrees(90));
             }
 
             wayPointsInterpolated.add(new Pose2d(c.getPoint(current), r));
             current = current.plus(angleIncrement);
-            DogLog.log("Autos/Arc/arcRadius", c.getRadius());
         }
         angleDelta = endAngle.minus(current);
         angleIncrement = angleDelta.div(addTurnPoints);
@@ -136,30 +143,53 @@ public class ArcFollower {
 
             Rotation2d thetaCenterToRobot = current;
             Rotation2d thetaDesiredP90 = new Rotation2d(thetaCenterToRobot.getCos(), thetaCenterToRobot.getSin());
-            Rotation2d thetaDesiredN90 = new Rotation2d(thetaCenterToRobot.getCos(), thetaCenterToRobot.getSin());
             if (turnClockwise) {
-                r = !isMirrored ? thetaDesiredP90.plus(Rotation2d.fromDegrees(90))
-                        : thetaDesiredP90.minus(Rotation2d.fromDegrees(90));
+                r = thetaDesiredP90.plus(Rotation2d.fromDegrees(90));
             } else {
-                r = !isMirrored ? thetaDesiredP90.minus(Rotation2d.fromDegrees(90))
-                        : thetaDesiredP90.plus(Rotation2d.fromDegrees(90));
+                r = thetaDesiredP90.minus(Rotation2d.fromDegrees(90));
             }
 
             wayPointsInterpolated.add(new Pose2d(c.getPoint(current), r));
             current = current.plus(angleIncrement);
-            DogLog.log("Autos/Arc/arcRadius", c.getRadius());
         }
+    }
+
+    /**
+     * Called continuously. Returns true when the entire path is complete.
+     */
+    public boolean run() {
+        // a broken arc (fewer than 3 waypoints) finishes instantly instead of
+        // crashing - the constructor already reported the error
+        if (waypoints.size() < 3) {
+            return true;
+        }
+
+        if (wayPointsInterpolated.isEmpty()) {
+            buildInterpolatedPoints();
+        }
+
         if (currentWaypointIndex >= wayPointsInterpolated.size()) {
             return true;
         }
 
-        isContinuous = isContinuous || (currentWaypointIndex != waypoints.size() - 1);
+        // start() only does something the first time - the timer measures how
+        // long this whole arc has been running
+        timeoutTimer.start();
+        if (timeoutTimer.hasElapsed(timeout_s)) {
+            DriverStation.reportError("ArcFollower timed out after " + timeout_s + "s, skipping rest of arc", false);
+            currentWaypointIndex = wayPointsInterpolated.size();
+            return true;
+        }
 
-        Pose2d p = wayPointsInterpolated.get(currentWaypointIndex);
+        boolean cont = isContinuous || (currentWaypointIndex != wayPointsInterpolated.size() - 1);
+
+        Pose2d p = applyFlipping(wayPointsInterpolated.get(currentWaypointIndex), isMirrored);
         DogLog.log("Autos/Arc/p", p);
+        DogLog.log("Autos/Arc/waypointIndex", currentWaypointIndex);
+        DogLog.log("Autos/Arc/timeRunning", timeoutTimer.get());
 
         if (!hasStartedCurrentWaypoint) {
-            manager.startVelocityDrivetoPose(p, maxDriveVelocity, maxRotateVelocity, atGoalTolerance, isContinuous);
+            manager.startVelocityDrivetoPose(p, maxDriveVelocity, maxRotateVelocity, atGoalTolerance, cont);
             hasStartedCurrentWaypoint = true;
         }
 
@@ -177,12 +207,12 @@ public class ArcFollower {
         Rotation2d rot = pose.getRotation();
 
         if (isMirrored) {
-            y = FIELD_WIDTH - y;
+            y = FieldUtil.FIELD_WIDTH - y;
             rot = Rotation2d.fromDegrees(-rot.getDegrees());
         }
 
         if (FmsUtil.isRedAlliance()) {
-            x = FIELD_LENGTH - x;
+            x = FieldUtil.FIELD_LENGTH - x;
             rot = Rotation2d.fromDegrees(180 - rot.getDegrees());
         }
 
