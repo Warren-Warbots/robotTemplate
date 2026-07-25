@@ -9,6 +9,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import dev.doglog.DogLog;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.simulation.SimMech;
@@ -121,21 +122,27 @@ public class PivatorSubsystem {
     systemState = handleStateTransition();
     applyStates();
     double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
-    pivotMotor.setControl(PivatorConstants.pivotPositionVoltage.withPosition(targetRotation));
-    elevatorFrontMotor.setControl(PivatorConstants.elevatorMotionMagicVoltage.withPosition(targetHeight));
+    // clamp every position command so a bad setpoint can't drive the mechanism
+    // past its physical limits
+    pivotMotor.setControl(PivatorConstants.pivotPositionVoltage.withPosition(
+        MathUtil.clamp(targetRotation, PivatorConstants.minPivotRot, PivatorConstants.maxPivotRot)));
+    elevatorFrontMotor.setControl(PivatorConstants.elevatorMotionMagicVoltage.withPosition(
+        MathUtil.clamp(targetHeight, PivatorConstants.minElevatorHeight, PivatorConstants.maxElevatorHeight)));
     if (Utils.isSimulation()) {
       simMech.updatePivot(pivotMotor.getPosition(), elevatorFrontMotor.getPosition());
     }
   }
 
+  // state functions only pick target values - the numbers themselves live in
+  // the constants file
   private void stow() {
-    targetHeight = Constants.IS_COMP_BOT ? 7.52 : 0.0;
-    targetRotation = Constants.IS_COMP_BOT ? 0.26 : 0.0;
+    targetHeight = PivatorConstants.stowHeight;
+    targetRotation = PivatorConstants.stowRotation;
   }
 
   private void scoreLVL4() {
-    targetHeight = Constants.IS_COMP_BOT ? 31.2 : 56;
-    targetRotation = Constants.IS_COMP_BOT ? 0.52 : 0.437763;
+    targetHeight = PivatorConstants.lvl4Height;
+    targetRotation = PivatorConstants.lvl4Rotation;
   }
 
 }

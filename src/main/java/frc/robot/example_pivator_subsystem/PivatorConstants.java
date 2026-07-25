@@ -17,6 +17,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import frc.robot.Constants;
 
 public class PivatorConstants {
 
@@ -35,6 +36,13 @@ public class PivatorConstants {
         public static double minPivotRot = -0.1;
         public static double maxPivotRot = 0.7;
         public static double pivotTolerance = 1.0 / 360;
+
+        // setpoints for each state - comp bot and practice bot are built slightly
+        // different, so each has its own numbers
+        public static double stowHeight = Constants.IS_COMP_BOT ? 7.52 : 0.0;
+        public static double stowRotation = Constants.IS_COMP_BOT ? 0.26 : 0.0;
+        public static double lvl4Height = Constants.IS_COMP_BOT ? 31.2 : maxElevatorHeight;
+        public static double lvl4Rotation = Constants.IS_COMP_BOT ? 0.52 : 0.437763;
 
         public static TalonFXConfiguration elevatorFrontMotorConfig = new TalonFXConfiguration()
                         .withMotorOutput(new MotorOutputConfigs()
