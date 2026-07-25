@@ -50,7 +50,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    DogLog.log("IsCompBot", Constants.IS_AT_COMP);
+    DogLog.log("IsAtComp", Constants.IS_AT_COMP);
+    DogLog.log("IsCompBot", Constants.IS_COMP_BOT);
   }
 
   @Override
@@ -87,7 +88,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-
+    // start teleop in a known state instead of whatever auto last requested
+    manager.setWantedRobotState(WantedRobotState.STOW);
   }
 
   @Override
@@ -97,11 +99,12 @@ public class Robot extends TimedRobot {
     // teleop
     boolean leftTrigger = driverController.getLeftTriggerAxis() > 0.5;
     boolean rightTrigger = driverController.getRightTriggerAxis() > 0.5;
-    boolean povLeft = driverController.getPOV() == 270;
-    boolean povRight = driverController.getPOV() == 90;
-    boolean startPressed = driverController.getStartButton();
     boolean rightBumper = driverController.getRightBumper();
     boolean leftBumper = driverController.getLeftBumper();
+
+    if (driverController.getBackButtonPressed()) {
+      swerve.resetGyro();
+    }
 
     if (leftTrigger) {
       manager.setWantedRobotState(WantedRobotState.AUTO_SCORE_L4);
