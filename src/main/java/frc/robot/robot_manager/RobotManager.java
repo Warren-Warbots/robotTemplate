@@ -42,7 +42,7 @@ public class RobotManager {
   }
 
   public void setWantedRobotState(WantedRobotState state) {
-    DogLog.log("Robot/wantedState", state);
+    DogLog.log("Robot/wantedState", state.name());
     timestampAtSetState = Timer.getFPGATimestamp();
     this.wantedState = state;
 
@@ -114,12 +114,11 @@ public class RobotManager {
 
   public void periodic() {
     double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
-    lights.setLightState(currentState);
     collectInputs();
     currentState = handleStateTransitions();
     applyStates();
     DogLog.log("Robot/currentState", currentState.name());
-    DogLog.log("Robot/wantedstate", wantedState.name());
+    DogLog.log("Robot/wantedState", wantedState.name());
 
   }
 
@@ -167,18 +166,21 @@ public class RobotManager {
     intake.setWantedState(IntakeSubsystem.WantedState.STOP);
     pivot.setWantedState(PivatorSubsystem.WantedState.STOW);
     swerve.setWantedState(SwerveSubsystem.WantedState.TELEOP_DRIVE);
+    lights.setWantedState(LightsSubsystem.WantedState.IDLE);
 
   }
 
   private void intake() {
     intake.setWantedState(IntakeSubsystem.WantedState.INTAKE);
     pivot.setWantedState(PivatorSubsystem.WantedState.STOW);
+    lights.setWantedState(LightsSubsystem.WantedState.INTAKING);
 
   }
 
   private void prepareScoreL4() {
     intake.setWantedState(IntakeSubsystem.WantedState.STOP);
     pivot.setWantedState(PivatorSubsystem.WantedState.LVL4);
+    lights.setWantedState(LightsSubsystem.WantedState.PREPARING);
     startDriveToPose(FieldUtil.getExamplePose(), 0.05, 3.0, 1, 2.0);
     // transition to actively scoring is handled in handleStateTransitions()
   }
@@ -186,6 +188,7 @@ public class RobotManager {
   private void scoreL4() {
     intake.setWantedState(IntakeSubsystem.WantedState.OUTTAKE);
     pivot.setWantedState(PivatorSubsystem.WantedState.LVL4);
+    lights.setWantedState(LightsSubsystem.WantedState.SCORING);
     if (!hasGP) {
       setWantedRobotState(WantedRobotState.STOW);
     }
@@ -193,6 +196,7 @@ public class RobotManager {
 
   private void driveWithVelocity() {
     swerve.setWantedState(SwerveSubsystem.WantedState.DRIVE_WITH_VELOCITY);
+    lights.setWantedState(LightsSubsystem.WantedState.AUTO_DRIVING);
   }
 
 }
