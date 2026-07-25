@@ -3,6 +3,7 @@ package frc.robot.util;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj.DriverStation;
 
 public class TalonFxUtils {
   public static StatusCode configureTalon(TalonFX motor, TalonFXConfiguration config) {
@@ -15,7 +16,11 @@ public class TalonFxUtils {
       }
     }
     if (!status.isOK()) {
-      System.out.println("Could not apply configs, error code: " + status.toString());
+      // reportError shows up red in the Driver Station messages, where drivers
+      // actually look - println only goes to the console log
+      DriverStation.reportError(
+          "Could not configure TalonFX with CAN ID " + motor.getDeviceID() + ", error code: " + status.toString(),
+          false);
     }
     return status;
   }
