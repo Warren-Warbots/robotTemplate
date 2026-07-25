@@ -49,8 +49,10 @@ public class DriveForwardAuto extends WarbotAuto {
         DogLog.log("AutoState", currentState);
         switch (currentState) {
             case START:
-                // In the starting state we set the starting point of our path,
-                // which only needs to be set once
+                // In the starting state we set the starting point of our path.
+                // if another auto already ran before this one in the sequence,
+                // this reset is skipped automatically and we start from
+                // wherever that auto ended
                 resetSwervePose(PathFollower.applyFlipping(UNDER_TRENCH_1[0], mirror));
                 currentState = currentState.next();
                 break;

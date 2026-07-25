@@ -1,78 +1,71 @@
 package frc.robot.autos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.robot_manager.RobotManager;
 
-/** Add your docs here. */
-public class Autos extends WarbotAuto {
-    private RobotManager manager;
-    private final SendableChooser<WarbotAuto> chooser1 = new SendableChooser<>();
-    private final SendableChooser<WarbotAuto> chooser2 = new SendableChooser<>();
+public class Autos {
+    /**
+     * Holds the auto choosers for the dashboard. Each slot picks one auto, and
+     * the selected autos run one after another (see SequentialAuto). Leave
+     * unused slots on DoNothing - they finish instantly.
+     */
+
+    // how many auto slots show up on the dashboard
+    private static final int NUM_SLOTS = 3;
+
+    private final RobotManager manager;
+    private final List<SendableChooser<WarbotAuto>> choosers = new ArrayList<>();
     private final SendableChooser<Boolean> mirrorAuto = new SendableChooser<>();
-    private WarbotAuto path1;
-    private WarbotAuto path2;
-    private boolean path1Finished = false;
+    private SequentialAuto sequence = new SequentialAuto();
 
     public Autos(RobotManager robotManager) {
         this.manager = robotManager;
-        chooser1.setDefaultOption("DoNothing", new DoNothingAuto());
-        chooser2.setDefaultOption("DoNothing", new DoNothingAuto());
-        SmartDashboard.putData("chooser1", chooser1);
-        SmartDashboard.putData("chooser2", chooser2);
+        sequence.setManager(manager);
 
-        path1 = new DoNothingAuto();
-        path1.setManager(manager);
-        path2 = new DoNothingAuto();
-        path2.setManager(manager);
+        for (int i = 0; i < NUM_SLOTS; i++) {
+            SendableChooser<WarbotAuto> chooser = new SendableChooser<>();
+            chooser.setDefaultOption("DoNothing", new DoNothingAuto());
+
+            // add every auto here - each slot needs its own copy, which is why
+            // this is inside the loop
+            chooser.addOption("DriveForwardAuto", new DriveForwardAuto());
+
+            SmartDashboard.putData("chooser" + (i + 1), chooser);
+            choosers.add(chooser);
+        }
 
         mirrorAuto.setDefaultOption("(Right) Normal", false);
-        mirrorAuto.addOption("(Right) Normal", false);
         mirrorAuto.addOption("(Left) Mirrored", true);
         SmartDashboard.putData("MirrorAuto", mirrorAuto);
-
-        chooser1.addOption("DriveForwardAuto", new DriveForwardAuto());
-        chooser2.addOption("DriveForwardAuto", new DriveForwardAuto());
-
-        // This is where the auto selector is created for the dashboard, alse calling
-        // each auto to set it in the auto selector
 
     }
 
     public void preloadAuto() {
-        WarbotAuto selectedPath1 = chooser1.getSelected();
-        if (selectedPath1 != null) {
-            path1 = selectedPath1;
+        // collect whatever is selected in each slot and line them up in order
+        WarbotAuto[] selected = new WarbotAuto[choosers.size()];
+        for (int i = 0; i < choosers.size(); i++) {
+            WarbotAuto choice = choosers.get(i).getSelected();
+            selected[i] = (choice != null) ? choice : new DoNothingAuto();
         }
-        WarbotAuto selectedPath2 = chooser2.getSelected();
-        if (selectedPath2 != null) {
-            path2 = selectedPath2;
-        }
-
-        path1.setManager(manager);
-        path2.setManager(manager);
-
-        // This function set the autos we selected on the dashboard
+        sequence = new SequentialAuto(selected);
+        sequence.setManager(manager);
     }
 
     public void init() {
-        path1Finished = false;
-        path1.init();
-        path2.init();
+        // lets the first auto in the sequence set the starting pose (and only
+        // the first - see WarbotAuto.resetSwervePose)
+        WarbotAuto.allowPoseReset();
+        sequence.init();
     }
 
     public void periodic() {
-        DogLog.log("Autos/path1finished", path1.isFinished());
-        DogLog.log("Autos/path2finished", path2.isFinished());
-        if (!path1Finished) {
-            path1.periodic();
-            if (path1.isFinished()) {
-                path1Finished = true;
-            }
-        } else {
-            path2.periodic();
-        }
+        DogLog.log("Autos/sequenceFinished", sequence.isFinished());
+        sequence.periodic();
     }
 
     public void updateMirror() {

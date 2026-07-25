@@ -43,7 +43,27 @@ public abstract class WarbotAuto {
         return new Translation2d(x, y);
     }
 
+    private static boolean poseResetUsed = false;
+
+    /**
+     * Called by Autos at the start of each autonomous run, so the next
+     * resetSwervePose() call works again.
+     */
+    public static void allowPoseReset() {
+        poseResetUsed = false;
+    }
+
+    /**
+     * Sets where the robot thinks it is on the field. Only the FIRST call of
+     * each autonomous run actually happens - so when autos run in a sequence,
+     * every auto can safely call this in its starting state, and autos after
+     * the first automatically keep the pose where the previous auto ended.
+     */
     public void resetSwervePose(Pose2d startingPose) {
+        if (poseResetUsed) {
+            return;
+        }
+        poseResetUsed = true;
         manager.swerve.resetPose(startingPose);
 
     }
