@@ -14,7 +14,8 @@ import java.util.List;
 
 public class PathFollower {
     private final RobotManager manager;
-    private final List<Pose2d> waypoints;
+    private List<Pose2d> waypoints = List.of();
+    private Pose2d[] lastSetPath = null;
     private double maxDriveVelocity = 2.5;
     private double maxRotateVelocity = 3.5;
     private double atGoalTolerance = 1.0;
@@ -27,10 +28,39 @@ public class PathFollower {
     private int currentWaypointIndex = 0;
     private boolean hasStartedCurrentWaypoint = false;
     private Timer timeoutTimer = new Timer();
+    private boolean warnedNoPath = false;
 
     public PathFollower(RobotManager manager, Pose2d... waypoints) {
         this.manager = manager;
-        this.waypoints = Arrays.asList(waypoints);
+        if (waypoints.length > 0) {
+            setPath(waypoints);
+        }
+    }
+
+    /**
+     * Gives the follower a path to drive. Safe to call every loop: handing it
+     * the SAME array does nothing, handing it a DIFFERENT array starts the new
+     * path from its first waypoint (with all settings back at their defaults,
+     * so each state fully describes its own path).
+     *
+     * Because "new path" means "different array", do not drive the same array
+     * in two back-to-back states - the follower can't tell that's a new run.
+     */
+    public PathFollower setPath(Pose2d... newWaypoints) {
+        if (newWaypoints != lastSetPath) {
+            reset();
+            this.waypoints = Arrays.asList(newWaypoints);
+            lastSetPath = newWaypoints;
+            // back to defaults so settings from the previous path can't leak
+            // into this one
+            maxDriveVelocity = 2.5;
+            maxRotateVelocity = 3.5;
+            atGoalTolerance = 1.0;
+            timeout_s = 10;
+            isContinuous = false;
+            isMirrored = false;
+        }
+        return this;
     }
 
     public PathFollower withMaxVelocity(double vel) {
@@ -68,14 +98,30 @@ public class PathFollower {
         hasStartedCurrentWaypoint = false;
         timeoutTimer.stop();
         timeoutTimer.reset();
+        // makes the next setPath() start fresh, even if it gets the same array
+        lastSetPath = null;
+    }
+
+    /** True once the whole path has been driven (or the timeout gave up). */
+    public boolean isDone() {
+        return !waypoints.isEmpty() && currentWaypointIndex >= waypoints.size();
     }
 
     /**
-     * Called continuously. Returns true when the entire path is complete.
+     * Called every loop. Drives the path a little further each call - check
+     * isDone() to see when the path is finished.
      */
-    public boolean run() {
-        if (currentWaypointIndex >= waypoints.size()) {
-            return true;
+    public void run() {
+        if (waypoints.isEmpty()) {
+            if (!warnedNoPath) {
+                warnedNoPath = true;
+                DriverStation.reportError("PathFollower has no path - call setPath() first", false);
+            }
+            return;
+        }
+
+        if (isDone()) {
+            return;
         }
 
         // start() only does something the first time - the timer measures how
@@ -84,7 +130,7 @@ public class PathFollower {
         if (timeoutTimer.hasElapsed(timeout_s)) {
             DriverStation.reportError("PathFollower timed out after " + timeout_s + "s, skipping rest of path", false);
             currentWaypointIndex = waypoints.size();
-            return true;
+            return;
         }
 
         Pose2d p = waypoints.get(currentWaypointIndex);
@@ -105,8 +151,6 @@ public class PathFollower {
         DogLog.log("Autos/PathFollower/waypointIndex", currentWaypointIndex);
         DogLog.log("Autos/PathFollower/targetPose", p);
         DogLog.log("Autos/PathFollower/timeRunning", timeoutTimer.get());
-
-        return currentWaypointIndex >= waypoints.size();
     }
 
     public static Pose2d applyFlipping(Pose2d pose, boolean isMirrored) {

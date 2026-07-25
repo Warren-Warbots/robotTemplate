@@ -9,8 +9,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.example_pivator_subsystem.PivatorSubsystem;
-import frc.robot.autos.ArcFollower;
-import frc.robot.autos.PathFollower;
 import frc.robot.example_intake_subsystem.IntakeSubsystem;
 import frc.robot.lights_subsystem.LightsSubsystem;
 import frc.robot.swerve.SwerveSubsystem;
@@ -29,12 +27,6 @@ public class RobotManager {
 
   private Timer scoreTimer = new Timer();
 
-  // Managed Path Following
-  private PathFollower currentPathFollower = null;
-  private ArcFollower currentArcFollower = null;
-
-  private Pose2d[] lastWaypoints = null;
-
   public RobotManager(SwerveSubsystem swerve, LightsSubsystem lights, PivatorSubsystem pivot, IntakeSubsystem intake) {
     this.swerve = swerve;
     this.lights = lights;
@@ -47,57 +39,6 @@ public class RobotManager {
     DogLog.log("Robot/wantedState", state.name());
     this.wantedState = state;
 
-  }
-
-  /**
-   * Universal path driving method for Auto routines.
-   * Automatically handles PathFollower instantiation and waypoint tracking.
-   * Returns true when the entire array of points has been reached.
-   */
-  public boolean drivePath(Pose2d[] waypoints, double maxVel, double maxRotVel, double tolerance, boolean continuous,
-      boolean mirror) {
-    // If we've started a new path, reset the follower
-    if (waypoints != lastWaypoints) {
-      currentPathFollower = new PathFollower(this, waypoints)
-          .withMaxVelocity(maxVel)
-          .withMaxRotateVelocity(maxRotVel)
-          .withTolerance(tolerance)
-          .continuous(continuous)
-          .withMirror(mirror);
-      lastWaypoints = waypoints;
-    }
-
-    if (currentPathFollower == null)
-      return true;
-    return currentPathFollower.run();
-  }
-
-  public boolean driveArc(Pose2d[] waypoints, double maxVel, double maxRotVel, double tolerance, double addTurnDegrees,
-      int nPoints, boolean continuous,
-      boolean turnClockwise,
-      boolean mirror) {
-    // If we've started a new path, reset the follower
-    if (waypoints != lastWaypoints) {
-      currentArcFollower = new ArcFollower(this, waypoints)
-          .withMaxVelocity(maxVel)
-          .withMaxRotateVelocity(maxRotVel)
-          .withTolerance(tolerance)
-          .addTurnDegrees(addTurnDegrees)
-          .addTurnPoints(nPoints)
-          .continuous(continuous)
-          .turnClockwise(turnClockwise)
-          .withMirror(mirror);
-      lastWaypoints = waypoints;
-    }
-
-    if (currentArcFollower == null)
-      return true;
-    return currentArcFollower.run();
-  }
-
-  /** Concise version for single-point driving in Auto */
-  public boolean drivePoint(Pose2d point, double maxVel, double tolerance, boolean mirror) {
-    return drivePath(new Pose2d[] { point }, maxVel, 3.5, tolerance, false, mirror);
   }
 
   public void startDriveToPose(Pose2d desiredPose, double translationToleranceMeters, double maxSpeed,

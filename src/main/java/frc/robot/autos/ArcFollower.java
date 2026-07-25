@@ -18,7 +18,8 @@ import dev.doglog.DogLog;
 
 public class ArcFollower {
     private final RobotManager manager;
-    private final List<Pose2d> waypoints;
+    private List<Pose2d> waypoints = List.of();
+    private Pose2d[] lastSetPath = null;
     private double maxDriveVelocity = 2.5;
     private double maxRotateVelocity = 3.5;
     private double atGoalTolerance = 0.25;
@@ -35,19 +36,52 @@ public class ArcFollower {
     private int currentWaypointIndex = 0;
     private boolean hasStartedCurrentWaypoint = false;
     private Timer timeoutTimer = new Timer();
+    private boolean warnedNoPath = false;
     // the interpolated arc points get built on the first run() call, after all
     // the withX() settings have been applied
     private ArrayList<Pose2d> wayPointsInterpolated = new ArrayList<>();
 
     public ArcFollower(RobotManager manager, Pose2d... waypoints) {
         this.manager = manager;
-        this.waypoints = Arrays.asList(waypoints);
-        if (waypoints.length < 3) {
-            DriverStation.reportError(
-                    "ArcFollower needs 3 waypoints (start, middle, end) but got " + waypoints.length
-                            + " - this arc will be skipped",
-                    false);
+        if (waypoints.length > 0) {
+            setPath(waypoints);
         }
+    }
+
+    /**
+     * Gives the follower an arc to drive - exactly 3 waypoints (start, middle,
+     * end). Safe to call every loop: handing it the SAME array does nothing,
+     * handing it a DIFFERENT array starts the new arc from its beginning (with
+     * all settings back at their defaults, so each state fully describes its
+     * own arc).
+     *
+     * Because "new arc" means "different array", do not drive the same array
+     * in two back-to-back states - the follower can't tell that's a new run.
+     */
+    public ArcFollower setPath(Pose2d... newWaypoints) {
+        if (newWaypoints != lastSetPath) {
+            reset();
+            this.waypoints = Arrays.asList(newWaypoints);
+            lastSetPath = newWaypoints;
+            if (newWaypoints.length < 3) {
+                DriverStation.reportError(
+                        "ArcFollower needs 3 waypoints (start, middle, end) but got " + newWaypoints.length
+                                + " - this arc will be skipped",
+                        false);
+            }
+            // back to defaults so settings from the previous arc can't leak
+            // into this one
+            maxDriveVelocity = 2.5;
+            maxRotateVelocity = 3.5;
+            atGoalTolerance = 0.25;
+            addTurnDegrees = 0.0;
+            addTurnPoints = 5;
+            timeout_s = 10;
+            isContinuous = false;
+            turnClockwise = false;
+            isMirrored = false;
+        }
+        return this;
     }
 
     public ArcFollower withMaxVelocity(double vel) {
@@ -100,6 +134,22 @@ public class ArcFollower {
         hasStartedCurrentWaypoint = false;
         timeoutTimer.stop();
         timeoutTimer.reset();
+        wayPointsInterpolated.clear();
+        // makes the next setPath() start fresh, even if it gets the same array
+        lastSetPath = null;
+    }
+
+    /** True once the whole arc has been driven (or the timeout gave up). */
+    public boolean isDone() {
+        if (waypoints.isEmpty()) {
+            return false;
+        }
+        // a broken arc (fewer than 3 waypoints) counts as done so the auto
+        // moves on - setPath already reported the error
+        if (waypoints.size() < 3) {
+            return true;
+        }
+        return !wayPointsInterpolated.isEmpty() && currentWaypointIndex >= wayPointsInterpolated.size();
     }
 
     // builds the arc points in un-flipped (blue, un-mirrored) coordinates.
@@ -155,21 +205,30 @@ public class ArcFollower {
     }
 
     /**
-     * Called continuously. Returns true when the entire path is complete.
+     * Called every loop. Drives the arc a little further each call - check
+     * isDone() to see when the arc is finished.
      */
-    public boolean run() {
-        // a broken arc (fewer than 3 waypoints) finishes instantly instead of
-        // crashing - the constructor already reported the error
+    public void run() {
+        if (waypoints.isEmpty()) {
+            if (!warnedNoPath) {
+                warnedNoPath = true;
+                DriverStation.reportError("ArcFollower has no arc - call setPath() first", false);
+            }
+            return;
+        }
+
+        // a broken arc finishes instantly instead of crashing - setPath
+        // already reported the error
         if (waypoints.size() < 3) {
-            return true;
+            return;
         }
 
         if (wayPointsInterpolated.isEmpty()) {
             buildInterpolatedPoints();
         }
 
-        if (currentWaypointIndex >= wayPointsInterpolated.size()) {
-            return true;
+        if (isDone()) {
+            return;
         }
 
         // start() only does something the first time - the timer measures how
@@ -178,7 +237,7 @@ public class ArcFollower {
         if (timeoutTimer.hasElapsed(timeout_s)) {
             DriverStation.reportError("ArcFollower timed out after " + timeout_s + "s, skipping rest of arc", false);
             currentWaypointIndex = wayPointsInterpolated.size();
-            return true;
+            return;
         }
 
         boolean cont = isContinuous || (currentWaypointIndex != wayPointsInterpolated.size() - 1);
@@ -197,8 +256,6 @@ public class ArcFollower {
             currentWaypointIndex++;
             hasStartedCurrentWaypoint = false;
         }
-
-        return currentWaypointIndex >= wayPointsInterpolated.size();
     }
 
     public static Pose2d applyFlipping(Pose2d pose, boolean isMirrored) {
