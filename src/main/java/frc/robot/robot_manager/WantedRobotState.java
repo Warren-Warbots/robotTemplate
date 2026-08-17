@@ -9,5 +9,9 @@ public enum WantedRobotState {
     STOW,
     INTAKE,
     AUTO_SCORE_L4,
-    DRIVE_WITH_VELOCITY;
+    DRIVE_WITH_VELOCITY,
+    DRIVE_HALF_SPEED,
+    CENTRIC_DRIVE,
+    SNAP,
+    SNAP_FORWARD;
 }

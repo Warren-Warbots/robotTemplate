@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.autos.Autos;
 import frc.robot.autos.DriveForwardAuto;
 import frc.robot.autos.WarbotAuto;
@@ -102,6 +103,11 @@ public class Robot extends TimedRobot {
     boolean startPressed = driverController.getStartButton();
     boolean rightBumper = driverController.getRightBumper();
     boolean leftBumper = driverController.getLeftBumper();
+    boolean bButton = driverController.getBButtonPressed();
+    boolean yButton = driverController.getYButtonPressed();
+    boolean aButton = driverController.getAButtonPressed();
+    boolean povForward = driverController.getPOV() == 0;
+    boolean povBackword = driverController.getPOV() == 180;
 
     if (leftTrigger) {
       manager.setWantedRobotState(WantedRobotState.AUTO_SCORE_L4);
@@ -111,10 +117,29 @@ public class Robot extends TimedRobot {
       manager.setWantedRobotState(WantedRobotState.STOW);
     } else if (leftBumper) {
       manager.setWantedRobotState(WantedRobotState.DRIVE_WITH_VELOCITY);
+    } else if (bButton) {
+      manager.setWantedRobotState(WantedRobotState.DRIVE_HALF_SPEED);
+    } else if (yButton) {
+      manager.setWantedRobotState(WantedRobotState.CENTRIC_DRIVE);
+    } else if (aButton) {
+      manager.setWantedRobotState(WantedRobotState.SNAP);
+    } else if (povForward) {
+      manager.setWantedSwerveAngle(0);
+      manager.setWantedRobotState(WantedRobotState.SNAP);
+    } else if (povRight){
+      manager.setWantedSwerveAngle(90);
+      manager.setWantedRobotState(WantedRobotState.SNAP);
+    } else if (povLeft){
+      manager.setWantedSwerveAngle(270);
+      manager.setWantedRobotState(WantedRobotState.SNAP);
+    } else if (povBackword){
+      manager.setWantedSwerveAngle(180);
+      manager.setWantedRobotState(WantedRobotState.SNAP);
     }
 
-  }
+    }
 
+  
   @Override
   public void teleopExit() {
   }

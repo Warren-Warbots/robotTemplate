@@ -13,6 +13,7 @@ import frc.robot.autos.PathFollower;
 import frc.robot.example_intake_subsystem.IntakeSubsystem;
 import frc.robot.lights_subsystem.LightsSubsystem;
 import frc.robot.swerve.SwerveSubsystem;
+import frc.robot.swerve.SwerveSubsystem.WantedState;
 import frc.robot.util.FieldUtil;
 
 public class RobotManager {
@@ -102,7 +103,7 @@ public class RobotManager {
   public void startDriveToPose(Pose2d desiredPose, double translationToleranceMeters, double maxSpeed,
       double rotationToleranceDegrees, double maxAngularSpeed) {
     swerve.setDriveToPose(desiredPose, translationToleranceMeters, maxSpeed, rotationToleranceDegrees, maxAngularSpeed);
-    swerve.setWantedState(SwerveSubsystem.WantedState.DRIVE_TO_POSE);
+    // swerve.setWantedState(SwerveSubsystem.WantedState.DRIVE_TO_POSE);
   }
 
   public void startVelocityDrivetoPose(Pose2d targetPose, double maxVelocity, double maxRotateVelo,
@@ -128,6 +129,9 @@ public class RobotManager {
     hasGP = intake.getSensor();
 
   }
+  public void setWantedSwerveAngle(double angle){
+    swerve.setSwerveRotationValue(angle);
+  }
 
   private CurrentRobotState handleStateTransitions() {
     return switch (wantedState) {
@@ -148,6 +152,18 @@ public class RobotManager {
       case DRIVE_WITH_VELOCITY: {
         yield CurrentRobotState.DRIVE_WITH_VELOCITY;
       }
+      case DRIVE_HALF_SPEED: {
+        yield CurrentRobotState.DRIVE_HALF_SPEED;
+      }
+      case CENTRIC_DRIVE: {
+        yield CurrentRobotState.CENTRIC_DRIVE;
+      }
+      case SNAP: {
+        yield CurrentRobotState.SNAP;
+      }
+      case SNAP_FORWARD: {
+        yield CurrentRobotState.SNAP_POINT;
+      }
     };
   }
 
@@ -159,6 +175,9 @@ public class RobotManager {
       case PREPARE_SCORE_L4 -> prepareScoreL4();
       case SCORE_L4 -> scoreL4();
       case DRIVE_WITH_VELOCITY -> driveWithVelocity();
+      case DRIVE_HALF_SPEED -> driveHalfSpeed();
+      case CENTRIC_DRIVE -> centricDrive();
+      case SNAP -> snap();
     }
     ;
   }
@@ -192,7 +211,20 @@ public class RobotManager {
   }
 
   private void driveWithVelocity() {
-    swerve.setWantedState(SwerveSubsystem.WantedState.DRIVE_WITH_VELOCITY);
+    // swerve.setWantedState(SwerveSubsystem.WantedState.DRIVE_WITH_VELOCITY);
   }
 
+  private void driveHalfSpeed() {
+    swerve.setWantedState(WantedState.DRIVE_HALF_SPEED);
+  }
+
+  private void centricDrive() {
+  swerve.setWantedState(WantedState.CENTRIC_DRIVE);
+  }
+
+  private void snap(){
+    swerve.setWantedState(WantedState.SNAP);
+  }
+  
+  
 }

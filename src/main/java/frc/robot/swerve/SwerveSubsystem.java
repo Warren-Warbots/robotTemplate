@@ -22,6 +22,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
@@ -89,6 +90,10 @@ public class SwerveSubsystem {
     private boolean atGoal = false;
     private boolean timerHasBeenEnabled = false;
 
+    Rotation2d foo = Rotation2d.fromDegrees(0);
+
+    Rotation2d dPadSnap = Rotation2d.fromDegrees(67);
+
     private String[] limelightNames = { "limelight" };
 
     private HashMap<String, Double> lastAddedVisionTimestampMap = new HashMap<String, Double>();
@@ -127,31 +132,27 @@ public class SwerveSubsystem {
 
     public enum WantedState {
         TELEOP_DRIVE,
-        CALIBRATION,
-        DRIVE_TO_POSE,
-        DRIVE_WITH_VELOCITY,
+        DRIVE_HALF_SPEED,
+        CENTRIC_DRIVE,
         SNAP,
-        SNAP_POINT;
-    }
+        }
 
     private enum SystemState {
         TELEOP_DRIVE,
-        CALIBRATION,
-        DRIVE_TO_POSE,
-        DRIVE_WITH_VELOCITY,
+        DRIVE_HALF_SPEED,
+        CENTRIC_DRIVE,
         SNAP,
         SNAP_POINT;
-    }
+        }
 
     // this handles simple, 1:1 transitions
     private SystemState handleStateTransitions() {
         return switch (wantedState) {
             case TELEOP_DRIVE -> SystemState.TELEOP_DRIVE;
-            case CALIBRATION -> SystemState.CALIBRATION;
-            case DRIVE_TO_POSE -> SystemState.DRIVE_TO_POSE;
-            case DRIVE_WITH_VELOCITY -> SystemState.DRIVE_WITH_VELOCITY;
+            case DRIVE_HALF_SPEED -> SystemState.DRIVE_HALF_SPEED;
+            case CENTRIC_DRIVE -> SystemState.CENTRIC_DRIVE;
             case SNAP -> SystemState.SNAP;
-            case SNAP_POINT -> SystemState.SNAP_POINT;
+         
         };
     }
 
@@ -159,11 +160,11 @@ public class SwerveSubsystem {
     public void applyStates() {
         switch (systemState) {
             case TELEOP_DRIVE -> teleopDrive();
-            case CALIBRATION -> calibration();
-            case DRIVE_TO_POSE -> driveToPose();
-            case DRIVE_WITH_VELOCITY -> driveWithVelocity();
+            case DRIVE_HALF_SPEED -> driveHalfSpeed();
+            case CENTRIC_DRIVE -> centricDrive();
             case SNAP -> snap();
             case SNAP_POINT -> snapPoint();
+
         }
     }
 
@@ -296,6 +297,9 @@ public class SwerveSubsystem {
                         getPose().getRotation()) < driveToPoseRotationToleranceDegrees;
 
     }
+    public void setSwerveRotationValue(double angle){
+        foo = new Rotation2d(Units.degreesToRadians(angle));
+    }
 
     public void resetPose(Pose2d pose) {
         startingPose = pose;
@@ -309,6 +313,7 @@ public class SwerveSubsystem {
         robotSpeed = new Translation2d(swerveDriveState.Speeds.vxMetersPerSecond,
                 swerveDriveState.Speeds.vyMetersPerSecond).getNorm();
         getTeleopDriveSpeeds();
+        DogLog.log("Swerve/rotation",swerveDriveState.Pose.getRotation().getDegrees());
         DogLog.log("Swerve/swerveDriveState/ModuleStates", swerveDriveState.ModuleStates);
         DogLog.log("Swerve/swerveDriveState/EstimatedPose", swerveDriveState.Pose);
         DogLog.log("Swerve/swerveDriveState/Speeds", swerveDriveState.Speeds);
@@ -332,61 +337,61 @@ public class SwerveSubsystem {
 
         currentTime = Timer.getFPGATimestamp();
 
-        if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.rightXDeadband) {
-            rotationJoystickLastTouched = currentTime;
-
-            if (systemState == SystemState.SNAP || systemState == SystemState.SNAP_POINT) {
-                setWantedState(WantedState.TELEOP_DRIVE);
-            }
-
-        }
-
-        if (robotSpeed > 1) {
-            highSpeedLastTime = currentTime;
-        }
-        if (systemState != SystemState.TELEOP_DRIVE) {
-            lastMaintainHeadingAngle = Optional.empty();
-        }
+ 
 
     }
 
     private void teleopDrive() {
-        if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.rightXDeadband
-                || lastMaintainHeadingAngle.isEmpty()
-                || ((currentTime - highSpeedLastTime) > 0.1)
-                || ((currentTime - rotationJoystickLastTouched < 0.2))) {
-
+        double joystickX = driverDesiredSpeeds.vxMetersPerSecond;
+        double joystickY = driverDesiredSpeeds.vyMetersPerSecond;
+        double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
             drivetrain
                     .setControl(drive_field_rel
-                            .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                            .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
-                            .withRotationalRate(
-                                    driverDesiredSpeeds.omegaRadiansPerSecond * getRobotRotationSpeed()));
-            lastMaintainHeadingAngle = Optional.of(swerveDriveState.Pose.getRotation());
+                            .withVelocityX(joystickY * getRobotTopSpeed())
+                            .withVelocityY(joystickX * getRobotTopSpeed())
+                            .withRotationalRate(joystickRot * getRobotRotationSpeed()));
 
-        } else {
-            drivetrain.setControl(drive_snap
-                    .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                    .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
-                    .withTargetDirection(lastMaintainHeadingAngle.get()));
 
-        }
+         
+    }
 
-        timerHasBeenEnabled = false;
+    private void driveHalfSpeed() {
+       double joystickX = driverDesiredSpeeds.vxMetersPerSecond;
+       double joystickY = driverDesiredSpeeds.vyMetersPerSecond;
+       double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
+       drivetrain
+                .setControl(drive_field_rel
+                            .withVelocityX(joystickY * 0.5 * getRobotTopSpeed())
+                            .withVelocityY(joystickX * 0.5 * getRobotTopSpeed())
+                            .withRotationalRate(joystickRot * getRobotRotationSpeed()));
+
+
+    }
+
+    private void centricDrive() {
+        double joystickX = driverDesiredSpeeds.vxMetersPerSecond;
+        double joystickY = driverDesiredSpeeds.vyMetersPerSecond;
+        double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
+            drivetrain
+                    .setControl(drive_robot_centric
+                            .withVelocityX(joystickX * getRobotTopSpeed())
+                            .withVelocityY(joystickY * getRobotTopSpeed())
+                            .withRotationalRate(joystickRot * getRobotRotationSpeed()));
+
     }
 
     private void snap() {
         drivetrain.setControl(drive_snap
-                .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
-                .withTargetDirection(snapAngle));
+                .withVelocityY(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
+                .withVelocityX(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                .withTargetDirection(foo));
     }
 
     private void snapPoint() {
         drivetrain.setControl(drive_snap
-                .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
-                .withTargetDirection(FieldUtil.getFieldRelativeAngleToPose(swerveDriveState.Pose, snapPoint)));
+                .withVelocityY(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
+                .withVelocityX(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                .withTargetDirection(dPadSnap));
     }
 
     private void driveToPose() {
