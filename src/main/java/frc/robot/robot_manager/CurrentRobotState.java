@@ -14,6 +14,7 @@ public enum CurrentRobotState {
     DRIVE_HALF_SPEED,
     CENTRIC_DRIVE,
     SNAP,
-    SNAP_POINT;
+    SNAP_POINT,
+    AUTO_POINT;
 
 }

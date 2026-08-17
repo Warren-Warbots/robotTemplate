@@ -164,6 +164,9 @@ public class RobotManager {
       case SNAP_FORWARD: {
         yield CurrentRobotState.SNAP_POINT;
       }
+      case AUTO_POINT: {
+        yield CurrentRobotState.AUTO_POINT;
+      }
     };
   }
 
@@ -178,6 +181,7 @@ public class RobotManager {
       case DRIVE_HALF_SPEED -> driveHalfSpeed();
       case CENTRIC_DRIVE -> centricDrive();
       case SNAP -> snap();
+      case AUTO_POINT -> autoPoint();
     }
     ;
   }
@@ -226,5 +230,8 @@ public class RobotManager {
     swerve.setWantedState(WantedState.SNAP);
   }
   
+  private void autoPoint(){
+    swerve.setWantedState(WantedState.AUTO_POINT);
+  }
   
 }

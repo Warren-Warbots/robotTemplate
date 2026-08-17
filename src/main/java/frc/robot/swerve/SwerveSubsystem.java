@@ -92,6 +92,9 @@ public class SwerveSubsystem {
 
     Rotation2d foo = Rotation2d.fromDegrees(0);
 
+    //this is the variable for the automatic driving task
+    Pose2d foooo = new Pose2d();
+
     Rotation2d dPadSnap = Rotation2d.fromDegrees(67);
 
     private String[] limelightNames = { "limelight" };
@@ -135,6 +138,7 @@ public class SwerveSubsystem {
         DRIVE_HALF_SPEED,
         CENTRIC_DRIVE,
         SNAP,
+        AUTO_POINT;
         }
 
     private enum SystemState {
@@ -142,7 +146,8 @@ public class SwerveSubsystem {
         DRIVE_HALF_SPEED,
         CENTRIC_DRIVE,
         SNAP,
-        SNAP_POINT;
+        SNAP_POINT,
+        AUTO_POINT;
         }
 
     // this handles simple, 1:1 transitions
@@ -152,6 +157,7 @@ public class SwerveSubsystem {
             case DRIVE_HALF_SPEED -> SystemState.DRIVE_HALF_SPEED;
             case CENTRIC_DRIVE -> SystemState.CENTRIC_DRIVE;
             case SNAP -> SystemState.SNAP;
+            case AUTO_POINT -> SystemState.AUTO_POINT;
          
         };
     }
@@ -164,6 +170,7 @@ public class SwerveSubsystem {
             case CENTRIC_DRIVE -> centricDrive();
             case SNAP -> snap();
             case SNAP_POINT -> snapPoint();
+            case AUTO_POINT -> autoPoint();
 
         }
     }
@@ -394,68 +401,14 @@ public class SwerveSubsystem {
                 .withTargetDirection(dPadSnap));
     }
 
-    private void driveToPose() {
-        Translation2d error = driveToPoseTargetPose.getTranslation()
-                .minus(swerveDriveState.Pose.getTranslation());
-        double distanceToGoal = error.getNorm();
-        Rotation2d directionOfTravel = error.getAngle();
-        double velocityOutput = 0.0;
-        if (DriverStation.isAutonomous()) {
-            velocityOutput = Math.min(
-                    Math.abs(SwerveConstants.autoDriveToPoseController.calculate(distanceToGoal, 0)),
-                    driveToPoseMaxSpeed);
-        } else {
-            velocityOutput = Math.min(
-                    Math.abs(SwerveConstants.teleopDriveToPoseController.calculate(distanceToGoal, 0)),
-                    driveToPoseMaxSpeed);
-        }
-        double xComponent = velocityOutput * directionOfTravel.getCos();
-        double yComponent = velocityOutput * directionOfTravel.getSin();
-
-        DogLog.log("Swerve/DriveToPoint/xVelocitySetpoint", xComponent);
-        DogLog.log("Swerve/DriveToPoint/yVelocitySetpoint", yComponent);
-        DogLog.log("Swerve/DriveToPoint/velocityOutput", velocityOutput);
-        DogLog.log("Swerve/DriveToPoint/linearDistance", distanceToGoal);
-        DogLog.log("Swerve/DriveToPoint/directionOfTravel", directionOfTravel);
-        DogLog.log("Swerve/DriveToPoint/desiredPoint", driveToPoseTargetPose);
-
+    private void autoPoint() {
         drivetrain.setControl(drive_snap
-                .withVelocityX(xComponent)
-                .withVelocityY(yComponent)
-                .withTargetDirection(driveToPoseTargetPose.getRotation())
-                .withMaxAbsRotationalRate(driveToPoseMaxAngularSpeed));
-    }
+                //.withVelocityY(drive)
+        
+        
+        );
 
-    private void driveWithVelocity() {
-        Pose2d currentPose = getPose();
-        Translation2d difference = targetPose.getTranslation().minus(currentPose.getTranslation());
-        if (isContinuous) {
-            tranlationMag = maxVelocity;
-        } else {
-            tranlationMag = Math
-                    .abs(SwerveConstants.autoDriveToPoseController.calculate(difference.getNorm(), 0));
 
-        }
-        tranlationMag = Math.min(tranlationMag, maxVelocity);
-
-        diffRotation = difference.getAngle();
-        xVelocity = tranlationMag * diffRotation.getCos();
-        yVelocity = tranlationMag * diffRotation.getSin();
-        double xSlew = xVelocity;
-        double ySlew = yVelocity;
-
-        drivetrain.setControl(drive_snap
-                .withVelocityX(xSlew)
-                .withVelocityY(ySlew)
-                .withCenterOfRotation(swerveCOR)
-                .withTargetDirection(targetPose.getRotation())
-                .withMaxAbsRotationalRate(maxRVelocity));
-        atGoal = (targetPose.minus(getPose())).getTranslation().getNorm() < atGoalTolerance; // dont double
-                                                                                             // calc
-        // This function is used for when following a path it maintains our swerve
-        // velocity thoughout the path
-        // isContinous is what set to know which points to stop at and which to maintian
-        // out velocity
     }
 
     private void calibration() {

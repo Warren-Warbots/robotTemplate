@@ -108,6 +108,7 @@ public class Robot extends TimedRobot {
     boolean aButton = driverController.getAButtonPressed();
     boolean povForward = driverController.getPOV() == 0;
     boolean povBackword = driverController.getPOV() == 180;
+    boolean xButton = driverController.getXButton();
 
     if (leftTrigger) {
       manager.setWantedRobotState(WantedRobotState.AUTO_SCORE_L4);
@@ -135,7 +136,7 @@ public class Robot extends TimedRobot {
     } else if (povBackword){
       manager.setWantedSwerveAngle(180);
       manager.setWantedRobotState(WantedRobotState.SNAP);
-    }
+    } 
 
     }
 

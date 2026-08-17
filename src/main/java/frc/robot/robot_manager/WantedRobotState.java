@@ -13,5 +13,6 @@ public enum WantedRobotState {
     DRIVE_HALF_SPEED,
     CENTRIC_DRIVE,
     SNAP,
-    SNAP_FORWARD;
+    SNAP_FORWARD,
+    AUTO_POINT;
 }
