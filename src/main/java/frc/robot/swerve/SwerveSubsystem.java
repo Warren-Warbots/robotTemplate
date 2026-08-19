@@ -42,6 +42,7 @@ public class SwerveSubsystem {
     private SwerveRequest.ApplyRobotSpeeds drive_robot_rel;
     private SwerveRequest.FieldCentricFacingAngle drive_snap;
     private SwerveRequest.FieldCentricFacingAngle driveMaintainHeading;
+    private SwerveRequest.FieldCentricFacingAngle auto_point;
     private SwerveRequest.RobotCentric drive_robot_centric;
     public WantedState wantedState = WantedState.TELEOP_DRIVE;
     private SystemState systemState = SystemState.TELEOP_DRIVE;
@@ -91,6 +92,7 @@ public class SwerveSubsystem {
     private boolean timerHasBeenEnabled = false;
 
     Rotation2d foo = Rotation2d.fromDegrees(0);
+    Translation2d fooo = new Translation2d();
 
     //this is the variable for the automatic driving task
     Pose2d foooo = new Pose2d();
@@ -119,11 +121,13 @@ public class SwerveSubsystem {
         drive_snap.HeadingController = SwerveConstants.snapController;
         drive_snap.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
         drive_snap.HeadingController.setTolerance(SwerveConstants.snapTolerance);
-
+        auto_point = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.Velocity)
+                .withDeadband(0.08)
+                .withRotationalDeadband(0.06 * SwerveConstants.maxRotSpeed);
         drive_robot_centric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity)
                 .withDeadband(0.08)
                 .withRotationalDeadband(0.06 * SwerveConstants.maxRotSpeed);
-
+        
         this.driverXboxController = driverXboxController;
 
         if (Utils.isSimulation()) {
@@ -402,14 +406,22 @@ public class SwerveSubsystem {
     }
 
     private void autoPoint() {
-        drivetrain.setControl(drive_snap
-                //.withVelocityY(drive)
-        
-        
-        );
+         fooo = FieldUtil.snapPoint();
+         Pose2d currentPose = getPose();
+         Translation2d error = fooo.minus(currentPose.getTranslation());
+         if (error.getNorm() >= 1){
+        drivetrain.setControl(auto_point
+                .withVelocityY(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
+                .withVelocityX(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                .withTargetDirection(foo));
+         } else {
+
+         }
+
+    };
 
 
-    }
+    
 
     private void calibration() {
         // hi

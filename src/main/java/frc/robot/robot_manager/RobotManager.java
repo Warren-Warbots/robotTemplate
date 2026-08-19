@@ -167,6 +167,7 @@ public class RobotManager {
       case AUTO_POINT: {
         yield CurrentRobotState.AUTO_POINT;
       }
+    
     };
   }
 
@@ -182,6 +183,7 @@ public class RobotManager {
       case CENTRIC_DRIVE -> centricDrive();
       case SNAP -> snap();
       case AUTO_POINT -> autoPoint();
+  
     }
     ;
   }
@@ -202,7 +204,7 @@ public class RobotManager {
   private void prepareScoreL4() {
     intake.setWantedState(IntakeSubsystem.WantedState.STOP);
     pivot.setWantedState(PivatorSubsystem.WantedState.LVL4);
-    startDriveToPose(FieldUtil.getExamplePose(), 0.05, 3.0, 1, 2.0);
+   // startDriveToPose(FieldUtil.getExamplePose(), 0.05, 3.0, 1, 2.0);
     // transition to actively scoring is handled in handleStateTransitions()
   }
 
