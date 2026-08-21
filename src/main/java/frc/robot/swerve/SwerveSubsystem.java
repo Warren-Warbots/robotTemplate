@@ -91,7 +91,7 @@ public class SwerveSubsystem {
     private boolean atGoal = false;
     private boolean timerHasBeenEnabled = false;
 
-    Rotation2d foo = Rotation2d.fromDegrees(0);
+    Rotation2d foo = Rotation2d.fromDegrees(67);
     Translation2d fooo = new Translation2d();
 
     //this is the variable for the automatic driving task
@@ -334,6 +334,8 @@ public class SwerveSubsystem {
         DogLog.log("Swerve/SystemState", systemState.name());
         DogLog.log("Swerve/WantedState", wantedState.name());
         DogLog.log("Swerve/atGoal", atGoal);
+        DogLog.log("Swerve/foooo", fooo.getAngle());
+
 
     }
 
@@ -409,13 +411,18 @@ public class SwerveSubsystem {
          fooo = FieldUtil.snapPoint();
          Pose2d currentPose = getPose();
          Translation2d error = fooo.minus(currentPose.getTranslation());
+         //Pose2d currentPose = drivetrain.getState().Pose;
          if (error.getNorm() >= 1){
         drivetrain.setControl(auto_point
-                .withVelocityY(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                .withVelocityX(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                .withVelocityY(error.getY())
+                .withVelocityX(error.getX())
                 .withTargetDirection(foo));
+                
+                
          } else {
-
+             drivetrain.setControl(auto_point
+                .withVelocityY(driverDesiredSpeeds.vxMetersPerSecond * 0.0 * getRobotTopSpeed())
+                .withVelocityX(driverDesiredSpeeds.vyMetersPerSecond * 0.0 * getRobotTopSpeed()));
          }
 
     };

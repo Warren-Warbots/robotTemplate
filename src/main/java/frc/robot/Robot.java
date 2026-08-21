@@ -117,8 +117,6 @@ public class Robot extends TimedRobot {
       manager.setWantedRobotState(WantedRobotState.INTAKE);
     } else if (rightBumper) {
       manager.setWantedRobotState(WantedRobotState.STOW);
-    } else if (leftBumper) {
-      manager.setWantedRobotState(WantedRobotState.DRIVE_WITH_VELOCITY);
     } else if (bButton) {
       manager.setWantedRobotState(WantedRobotState.DRIVE_HALF_SPEED);
     } else if (yButton) {
@@ -137,7 +135,7 @@ public class Robot extends TimedRobot {
     } else if (povBackword){
       manager.setWantedSwerveAngle(180);
       manager.setWantedRobotState(WantedRobotState.SNAP);
-    } else if (rightBumper){
+    } else if (leftBumper){
       manager.setWantedRobotState(WantedRobotState.AUTO_POINT);
     }
 

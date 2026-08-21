@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 public class FieldUtil {
 
   public static Translation2d snapPoint() {
-    return FmsUtil.isRedAlliance() ? new Translation2d(6.0, 7.0) : new Translation2d(7, 6);
+    return FmsUtil.isRedAlliance() ? new Translation2d(6.0, 7.0) : new Translation2d(0, 0);
   }
 
   public static double angleBetweenRotation2ds(Rotation2d a, Rotation2d b) {
