@@ -12,23 +12,23 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import frc.robot.swerve.generated.CompTunerConstants;
+import frc.robot.swerve.generated.TunerConstants;
 
 /** Add your docs here. */
 public class SwerveConstants {
 
-    public static SwerveDrivetrainConstants swerveDrivetrainConstants = CompTunerConstants.DrivetrainConstants;
+    public static SwerveDrivetrainConstants swerveDrivetrainConstants = TunerConstants.DrivetrainConstants;
 
-    public static SwerveModuleConstants FrontLeft = CompTunerConstants.FrontLeft;
-    public static SwerveModuleConstants FrontRight = CompTunerConstants.FrontRight;
-    public static SwerveModuleConstants BackLeft = CompTunerConstants.BackLeft;
-    public static SwerveModuleConstants BackRight = CompTunerConstants.BackRight;
+    public static SwerveModuleConstants FrontLeft = TunerConstants.FrontLeft;
+    public static SwerveModuleConstants FrontRight = TunerConstants.FrontRight;
+    public static SwerveModuleConstants BackLeft = TunerConstants.BackLeft;
+    public static SwerveModuleConstants BackRight = TunerConstants.BackRight;
 
     // physical constants, get by driving robot, or asking design
-    public static final double maxSpeed = CompTunerConstants.kSpeedAt12Volts.baseUnitMagnitude();
+    public static final double maxSpeed = TunerConstants.kSpeedAt12Volts.baseUnitMagnitude();
     public static final double maxRotSpeed = 7.0; // rad/second, should probably tune this?
 
-    public static final double driveGearRatio = CompTunerConstants.kDriveGearRatio;
+    public static final double driveGearRatio = TunerConstants.kDriveGearRatio;
 
     // driver configs - driver should tune these
 

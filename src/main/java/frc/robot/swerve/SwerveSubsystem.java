@@ -29,7 +29,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.swerve.generated.CompTunerConstants.TunerSwerveDrivetrain;
+import frc.robot.swerve.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.util.ControllerHelpers;
 import frc.robot.util.FieldUtil;
 import frc.robot.util.FmsUtil;
@@ -96,6 +96,8 @@ public class SwerveSubsystem {
 
     //this is the variable for the automatic driving task
     Pose2d foooo = new Pose2d();
+
+
 
     Rotation2d dPadSnap = Rotation2d.fromDegrees(67);
 
@@ -311,6 +313,9 @@ public class SwerveSubsystem {
     public void setSwerveRotationValue(double angle){
         foo = new Rotation2d(Units.degreesToRadians(angle));
     }
+   public void setAutoDrivePose(Pose2d pose){
+    foooo = pose;
+   }
 
     public void resetPose(Pose2d pose) {
         startingPose = pose;
@@ -360,8 +365,8 @@ public class SwerveSubsystem {
         double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
             drivetrain
                     .setControl(drive_field_rel
-                            .withVelocityX(joystickY * getRobotTopSpeed())
-                            .withVelocityY(joystickX * getRobotTopSpeed())
+                            .withVelocityX(joystickX * getRobotTopSpeed())
+                            .withVelocityY(joystickY * getRobotTopSpeed())
                             .withRotationalRate(joystickRot * getRobotRotationSpeed()));
 
 
@@ -408,15 +413,14 @@ public class SwerveSubsystem {
     }
 
     private void autoPoint() {
-         fooo = FieldUtil.snapPoint();
          Pose2d currentPose = getPose();
-         Translation2d error = fooo.minus(currentPose.getTranslation());
+         Translation2d error = foooo.getTranslation().minus(currentPose.getTranslation());
          //Pose2d currentPose = drivetrain.getState().Pose;
          if (error.getNorm() >= 1){
         drivetrain.setControl(auto_point
                 .withVelocityY(error.getY())
                 .withVelocityX(error.getX())
-                .withTargetDirection(foo));
+                .withTargetDirection(foooo.getRotation()));
                 
                 
          } else {
