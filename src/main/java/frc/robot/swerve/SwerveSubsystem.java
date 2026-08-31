@@ -120,7 +120,9 @@ public class SwerveSubsystem {
         drive_snap = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.Velocity)
                 .withDeadband(0.08)
                 .withRotationalDeadband(0.06 * SwerveConstants.maxRotSpeed);
-        drive_snap.HeadingController = SwerveConstants.snapController;
+        // drive_snap.HeadingController = SwerveConstants.snapController;
+        drive_snap.HeadingController = SwerveConstants.pointController;
+
         drive_snap.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
         drive_snap.HeadingController.setTolerance(SwerveConstants.snapTolerance);
         auto_point = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.Velocity)
@@ -412,24 +414,18 @@ public class SwerveSubsystem {
                 .withTargetDirection(dPadSnap));
     }
 
-    private void autoPoint() {
-         Pose2d currentPose = getPose();
-         Translation2d error = foooo.getTranslation().minus(currentPose.getTranslation());
-         //Pose2d currentPose = drivetrain.getState().Pose;
-         if (error.getNorm() >= 1){
-        drivetrain.setControl(auto_point
-                .withVelocityY(error.getY())
-                .withVelocityX(error.getX())
-                .withTargetDirection(foooo.getRotation()));
-                
-                
-         } else {
-             drivetrain.setControl(auto_point
-                .withVelocityY(driverDesiredSpeeds.vxMetersPerSecond * 0.0 * getRobotTopSpeed())
-                .withVelocityX(driverDesiredSpeeds.vyMetersPerSecond * 0.0 * getRobotTopSpeed()));
-         }
+   
+       private void autoPoint() {
+        double kp= 1;
+        double errorX= 6;
 
-    };
+        drivetrain.setControl(auto_point
+
+        .withVelocityY(0)
+        .withVelocityX(kp * errorX)
+        .withTargetDirection(foooo.getRotation()));
+};
+                
 
 
     

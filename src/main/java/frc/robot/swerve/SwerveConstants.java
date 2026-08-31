@@ -52,6 +52,9 @@ public class SwerveConstants {
 
     public static final PhoenixPIDController snapController = new PhoenixPIDController(16.383, 0.0, 1);
 
+    public static final PhoenixPIDController pointController = new PhoenixPIDController(17.0, 0.0, 1.0);
+
+
     public static final double snapTolerance = 0.5; // radians
     public static final double maintainHeadingTolerance = 0.5; // radians - this does nothing
 

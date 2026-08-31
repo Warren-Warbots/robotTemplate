@@ -139,7 +139,6 @@ public class Robot extends TimedRobot {
       manager.setWantedSwerveAngle(180);
       manager.setWantedRobotState(WantedRobotState.SNAP);
     } else if (leftBumper){
-      swerve.setAutoDrivePose(new Pose2d(2, 2, new Rotation2d(Units.degreesToRadians(67))));
       manager.setWantedRobotState(WantedRobotState.AUTO_POINT);
     }
 
