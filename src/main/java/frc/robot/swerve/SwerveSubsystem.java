@@ -416,16 +416,15 @@ public class SwerveSubsystem {
 
    
        private void autoPoint() {
-        Translation2d currentPose = getPose().getTranslation();
-        Translation2d goal = fooo;
-        double kp= 1;
-        Translation2d error = goal.minus(currentPose);
-
+       double kp = 8.233;
+       double goal = 1;
+       double current = getPose().getX();
+       double errorX = goal - current;
+       double errorY = 0;
         drivetrain.setControl(auto_point
 
-        .withVelocityY(kp * error.getY())
-        .withVelocityX(kp * error.getX())
-        .withTargetDirection(foooo.getRotation()));
+        .withVelocityY(kp * errorY)
+        .withVelocityX(kp * errorX));
 };
                 
 
