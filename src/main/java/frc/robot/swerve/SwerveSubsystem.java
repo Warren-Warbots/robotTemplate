@@ -128,6 +128,7 @@ public class SwerveSubsystem {
         auto_point = new SwerveRequest.FieldCentricFacingAngle().withDriveRequestType(DriveRequestType.Velocity)
                 .withDeadband(0.08)
                 .withRotationalDeadband(0.06 * SwerveConstants.maxRotSpeed);
+        auto_point.HeadingController = SwerveConstants.pointController;
         drive_robot_centric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity)
                 .withDeadband(0.08)
                 .withRotationalDeadband(0.06 * SwerveConstants.maxRotSpeed);
@@ -427,9 +428,12 @@ public class SwerveSubsystem {
         .withVelocityY(kp * errorY)
         .withVelocityX(kp * errorX)
         .withTargetDirection(foooo.getRotation()));
-        
+        atGoal = errorX < 0.5 && errorY < 0.5;
+      
 };
-
+ public boolean atGoal () {
+  return atGoal;
+ }
                 
 
 

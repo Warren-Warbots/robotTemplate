@@ -140,6 +140,10 @@ public class Robot extends TimedRobot {
       manager.setWantedRobotState(WantedRobotState.SNAP);
     } else if (leftBumper){
       manager.setWantedRobotState(WantedRobotState.AUTO_POINT);
+      swerve.setAutoDrivePose(new Pose2d(1 ,1, new Rotation2d(Units.degreesToRadians(90))));
+      if (swerve.atGoal()) {
+        swerve.setAutoDrivePose(new Pose2d(2 ,2, new Rotation2d(Units.degreesToRadians(90))));
+      }
     }
 
     }
