@@ -94,10 +94,8 @@ public class SwerveSubsystem {
     Rotation2d foo = Rotation2d.fromDegrees(67);
     Translation2d fooo = new Translation2d();
 
-    //this is the variable for the automatic driving task
+    // this is the variable for the automatic driving task
     Pose2d foooo = new Pose2d();
-
-
 
     Rotation2d dPadSnap = Rotation2d.fromDegrees(67);
 
@@ -132,7 +130,7 @@ public class SwerveSubsystem {
         drive_robot_centric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity)
                 .withDeadband(0.08)
                 .withRotationalDeadband(0.06 * SwerveConstants.maxRotSpeed);
-        
+
         this.driverXboxController = driverXboxController;
 
         if (Utils.isSimulation()) {
@@ -148,7 +146,7 @@ public class SwerveSubsystem {
         CENTRIC_DRIVE,
         SNAP,
         AUTO_POINT;
-        }
+    }
 
     private enum SystemState {
         TELEOP_DRIVE,
@@ -157,7 +155,7 @@ public class SwerveSubsystem {
         SNAP,
         SNAP_POINT,
         AUTO_POINT;
-        }
+    }
 
     // this handles simple, 1:1 transitions
     private SystemState handleStateTransitions() {
@@ -167,7 +165,7 @@ public class SwerveSubsystem {
             case CENTRIC_DRIVE -> SystemState.CENTRIC_DRIVE;
             case SNAP -> SystemState.SNAP;
             case AUTO_POINT -> SystemState.AUTO_POINT;
-         
+
         };
     }
 
@@ -313,12 +311,14 @@ public class SwerveSubsystem {
                         getPose().getRotation()) < driveToPoseRotationToleranceDegrees;
 
     }
-    public void setSwerveRotationValue(double angle){
+
+    public void setSwerveRotationValue(double angle) {
         foo = new Rotation2d(Units.degreesToRadians(angle));
     }
-   public void setAutoDrivePose(Pose2d pose){
-    foooo = pose;
-   }
+
+    public void setAutoDrivePose(Pose2d pose) {
+        foooo = pose;
+    }
 
     public void resetPose(Pose2d pose) {
         startingPose = pose;
@@ -332,7 +332,7 @@ public class SwerveSubsystem {
         robotSpeed = new Translation2d(swerveDriveState.Speeds.vxMetersPerSecond,
                 swerveDriveState.Speeds.vyMetersPerSecond).getNorm();
         getTeleopDriveSpeeds();
-        DogLog.log("Swerve/rotation",swerveDriveState.Pose.getRotation().getDegrees());
+        DogLog.log("Swerve/rotation", swerveDriveState.Pose.getRotation().getDegrees());
         DogLog.log("Swerve/swerveDriveState/ModuleStates", swerveDriveState.ModuleStates);
         DogLog.log("Swerve/swerveDriveState/EstimatedPose", swerveDriveState.Pose);
         DogLog.log("Swerve/swerveDriveState/Speeds", swerveDriveState.Speeds);
@@ -343,7 +343,7 @@ public class SwerveSubsystem {
         DogLog.log("Swerve/WantedState", wantedState.name());
         DogLog.log("Swerve/atGoal", atGoal);
         DogLog.log("Swerve/foooo", fooo.getAngle());
-
+        DogLog.log("Swerve/pose", foooo);
 
     }
 
@@ -358,34 +358,29 @@ public class SwerveSubsystem {
 
         currentTime = Timer.getFPGATimestamp();
 
- 
-
     }
 
     private void teleopDrive() {
         double joystickX = driverDesiredSpeeds.vxMetersPerSecond;
         double joystickY = driverDesiredSpeeds.vyMetersPerSecond;
         double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
-            drivetrain
-                    .setControl(drive_field_rel
-                            .withVelocityX(joystickX * getRobotTopSpeed())
-                            .withVelocityY(joystickY * getRobotTopSpeed())
-                            .withRotationalRate(joystickRot * getRobotRotationSpeed()));
+        drivetrain
+                .setControl(drive_field_rel
+                        .withVelocityX(joystickX * getRobotTopSpeed())
+                        .withVelocityY(joystickY * getRobotTopSpeed())
+                        .withRotationalRate(joystickRot * getRobotRotationSpeed()));
 
-
-         
     }
 
     private void driveHalfSpeed() {
-       double joystickX = driverDesiredSpeeds.vxMetersPerSecond;
-       double joystickY = driverDesiredSpeeds.vyMetersPerSecond;
-       double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
-       drivetrain
+        double joystickX = driverDesiredSpeeds.vxMetersPerSecond;
+        double joystickY = driverDesiredSpeeds.vyMetersPerSecond;
+        double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
+        drivetrain
                 .setControl(drive_field_rel
-                            .withVelocityX(joystickY * 0.5 * getRobotTopSpeed())
-                            .withVelocityY(joystickX * 0.5 * getRobotTopSpeed())
-                            .withRotationalRate(joystickRot * getRobotRotationSpeed()));
-
+                        .withVelocityX(joystickY * 0.5 * getRobotTopSpeed())
+                        .withVelocityY(joystickX * 0.5 * getRobotTopSpeed())
+                        .withRotationalRate(joystickRot * getRobotRotationSpeed()));
 
     }
 
@@ -393,11 +388,11 @@ public class SwerveSubsystem {
         double joystickX = driverDesiredSpeeds.vxMetersPerSecond;
         double joystickY = driverDesiredSpeeds.vyMetersPerSecond;
         double joystickRot = driverDesiredSpeeds.omegaRadiansPerSecond;
-            drivetrain
-                    .setControl(drive_robot_centric
-                            .withVelocityX(joystickX * getRobotTopSpeed())
-                            .withVelocityY(joystickY * getRobotTopSpeed())
-                            .withRotationalRate(joystickRot * getRobotRotationSpeed()));
+        drivetrain
+                .setControl(drive_robot_centric
+                        .withVelocityX(joystickX * getRobotTopSpeed())
+                        .withVelocityY(joystickY * getRobotTopSpeed())
+                        .withRotationalRate(joystickRot * getRobotRotationSpeed()));
 
     }
 
@@ -415,29 +410,25 @@ public class SwerveSubsystem {
                 .withTargetDirection(dPadSnap));
     }
 
-   
-       private void autoPoint() {
-       double kp = 8.233;
-       double currentX = getPose().getX();
-       double currentY = getPose().getY();
+    private void autoPoint() {
+        double kp = 8.233;
+        double currentX = getPose().getX();
+        double currentY = getPose().getY();
 
-       double errorX = foooo.getX() - currentX;
-       double errorY = foooo.getY() - currentY;
-       drivetrain.setControl(auto_point
+        double errorX = foooo.getX() - currentX;
+        double errorY = foooo.getY() - currentY;
+        drivetrain.setControl(auto_point
 
-        .withVelocityY(kp * errorY)
-        .withVelocityX(kp * errorX)
-        .withTargetDirection(foooo.getRotation()));
+                .withVelocityY(kp * errorY)
+                .withVelocityX(kp * errorX)
+                .withTargetDirection(foooo.getRotation()));
         atGoal = errorX < 0.5 && errorY < 0.5;
-      
-};
- public boolean atGoal () {
-  return atGoal;
- }
-                
 
+    };
 
-    
+    public boolean atGoal() {
+        return atGoal;
+    }
 
     private void calibration() {
         // hi

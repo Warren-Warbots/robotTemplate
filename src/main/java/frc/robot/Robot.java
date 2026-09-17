@@ -41,6 +41,7 @@ public class Robot extends TimedRobot {
         new DogLogOptions().withCaptureNt(false)
             .withCaptureDs(true)
             .withNtPublish(!Constants.IS_AT_COMP));
+
   }
 
   @Override
@@ -112,7 +113,6 @@ public class Robot extends TimedRobot {
     boolean povForward = driverController.getPOV() == 0;
     boolean povBackword = driverController.getPOV() == 180;
     boolean xButton = driverController.getXButton();
-    
 
     if (leftTrigger) {
       manager.setWantedRobotState(WantedRobotState.AUTO_SCORE_L4);
@@ -129,35 +129,31 @@ public class Robot extends TimedRobot {
     } else if (povForward) {
       manager.setWantedSwerveAngle(0);
       manager.setWantedRobotState(WantedRobotState.SNAP);
-    } else if (povRight){
+    } else if (povRight) {
       manager.setWantedSwerveAngle(90);
       manager.setWantedRobotState(WantedRobotState.SNAP);
-    } else if (povLeft){
+    } else if (povLeft) {
       manager.setWantedSwerveAngle(270);
       manager.setWantedRobotState(WantedRobotState.SNAP);
-    } else if (povBackword){
+    } else if (povBackword) {
       manager.setWantedSwerveAngle(180);
       manager.setWantedRobotState(WantedRobotState.SNAP);
-    } else if (leftBumper){
-      Boolean path1 = false;
-      Boolean path2 = false;
-      Boolean path3 = false;
-
+    } else if (leftBumper) {
+      boolean path1 = false;
       manager.setWantedRobotState(WantedRobotState.AUTO_POINT);
-      swerve.setAutoDrivePose(new Pose2d(1 ,1, new Rotation2d(Units.degreesToRadians(90))));
-      path1 = true;
+      swerve.setAutoDrivePose(new Pose2d(1, 1, new Rotation2d(Units.degreesToRadians(90))));
+      if (swerve.atGoal()) {
+        swerve.setAutoDrivePose(new Pose2d(2, 2, new Rotation2d(Units.degreesToRadians(180))));
+        path1 = true;
+        DogLog.log("Swerve/path1", path1);
+      }
       if (path1 = true) {
-        swerve.setAutoDrivePose(new Pose2d(2 ,2, new Rotation2d(Units.degreesToRadians(180))));
-      path2 = true;
-      } if (path2 = true) {
-        swerve.setAutoDrivePose(new Pose2d(3 ,3, new Rotation2d(Units.degreesToRadians(90))));
-        path3 = true;
+        swerve.setAutoDrivePose(new Pose2d(3, 3, new Rotation2d(Units.degreesToRadians(90))));
       }
     }
 
-    }
+  }
 
-  
   @Override
   public void teleopExit() {
   }
