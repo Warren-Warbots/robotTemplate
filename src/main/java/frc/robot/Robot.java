@@ -139,19 +139,21 @@ public class Robot extends TimedRobot {
       manager.setWantedSwerveAngle(180);
       manager.setWantedRobotState(WantedRobotState.SNAP);
     } else if (leftBumper) {
+      double rotation = manager.swerve.getPose().getRotation().getDegrees();
+      Pose2d targetPose = new Pose2d();
       manager.setWantedRobotState(WantedRobotState.AUTO_POINT);
-      swerve.setAutoDrivePose(new Pose2d(1, 1, new Rotation2d(Units.degreesToRadians(90))));
-      if (swerve.atGoal()) {
+      if (rotation >= 179){ 
+        swerve.setAutoDrivePose(new Pose2d(3, 3, new Rotation2d(Units.degreesToRadians(0))));
+        targetPose = new Pose2d(3, 3, new Rotation2d(Units.degreesToRadians(0)));
+      } else if (swerve.atGoal()) {
         swerve.setAutoDrivePose(new Pose2d(2, 2, new Rotation2d(Units.degreesToRadians(180))));
-        if (swerve.atGoal()){
-          swerve.setAutoDrivePose(new Pose2d(2, 2, new Rotation2d(Units.degreesToRadians(180))));
-        }
-        else {
-          swerve.setAutoDrivePose(new Pose2d(3, 3, new Rotation2d(Units.degreesToRadians(180))));
-        }
-        //swerve.setAutoDrivePose(new Pose2d(2, 2, new Rotation2d(Units.degreesToRadians(180))));
-      }
-  
+        targetPose = new Pose2d(2, 2, new Rotation2d(Units.degreesToRadians(180)));
+  } else {
+        swerve.setAutoDrivePose(new Pose2d(1, 1, new Rotation2d(Units.degreesToRadians(0))));
+        targetPose = new Pose2d(1, 1, new Rotation2d(Units.degreesToRadians(0)));
+  }
+      DogLog.log("rotation", swerve.getPose().getRotation());
+      DogLog.log("PoseGoal", targetPose);
     }
 
   }
