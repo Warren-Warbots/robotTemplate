@@ -77,7 +77,7 @@ public class TunerConstants {
 
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
-    public static final CANBus kCANBus = new CANBus("drive", "./logs/example.hoot");
+    public static final CANBus kCANBus = new CANBus("rio", "./logs/example.hoot");
 
     // Measured robot speed (m/s) at 12 V applied output;
     // This is NOT the desired max robot speed - see MaxSpeed in RobotContainer instead;
@@ -148,7 +148,7 @@ public class TunerConstants {
     private static final int kFrontRightDriveMotorId = 11;
     private static final int kFrontRightSteerMotorId = 8;
     private static final int kFrontRightEncoderId = 24;
-    private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.25244140625);
+    private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.252197265625);
     private static final boolean kFrontRightSteerMotorInverted = true;
     private static final boolean kFrontRightEncoderInverted = false;
 
