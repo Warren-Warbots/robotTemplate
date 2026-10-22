@@ -1,0 +1,12 @@
+- 2027 branch
+- remove arc follower
+- more global constants (ie field width/length)
+- vision stuff (new framework and limelight helpers)
+- lights? -- maybe add more instruction
+- faster drive updates with more instruction about how to tune to driver liking
+- consistency between applystates stuff
+
+In season updates:
+- FIELD UTIL -- kickoff + first week
+- FMS UTil -- kickoff + first week
+- (for these it might just be updating to the template after making it in the real repo)
