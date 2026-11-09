@@ -4,15 +4,19 @@
 
 package frc.robot.util;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchType;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.driverstation.Alliance;
 
 public class FmsUtil {
 
     public static boolean isRedAlliance() {
-        Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+        Alliance alliance = MatchState.getAlliance().orElse(Alliance.BLUE);
 
-        return alliance == Alliance.Red;
+        return alliance == Alliance.RED;
     }
 
 }

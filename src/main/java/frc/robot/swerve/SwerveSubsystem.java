@@ -13,32 +13,34 @@ import dev.doglog.DogLog;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
+import org.wpilib.math.linalg.Matrix;
+import org.wpilib.math.filter.SlewRateLimiter;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Transform2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.numbers.N1;
+import org.wpilib.math.numbers.N3;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchType;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.RobotController;
+import org.wpilib.system.Timer;
+import org.wpilib.driverstation.XboxController;
 import frc.robot.swerve.generated.CompTunerConstants.TunerSwerveDrivetrain;
 import frc.robot.util.ControllerHelpers;
 import frc.robot.util.FieldUtil;
 import frc.robot.util.FmsUtil;
-import frc.robot.util.LimelightHelpers;
-import frc.robot.util.LimelightHelpers.PoseEstimate;
 
 public class SwerveSubsystem {
     public TunerSwerveDrivetrain drivetrain;
     private SwerveRequest.FieldCentric drive_field_rel;
-    private SwerveRequest.ApplyRobotSpeeds drive_robot_rel;
+    private SwerveRequest.ApplyRobotVelocity drive_robot_rel;
     private SwerveRequest.FieldCentricFacingAngle drive_snap;
     private SwerveRequest.FieldCentricFacingAngle driveMaintainHeading;
     private SwerveRequest.RobotCentric drive_robot_centric;
@@ -46,7 +48,7 @@ public class SwerveSubsystem {
     private SystemState systemState = SystemState.TELEOP_DRIVE;
     private double currTopSpeedPercent = 1.0;
     private double currTopRotationSpeedPercent = 1.0;
-    private ChassisSpeeds driverDesiredSpeeds = new ChassisSpeeds();
+    private ChassisVelocities driverDesiredSpeeds = new ChassisVelocities();
     private double currentTime = 0.0;
     private double xVelocity;
     private double yVelocity;
@@ -62,8 +64,8 @@ public class SwerveSubsystem {
     private SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(8);
     private Translation2d swerveCOR = new Translation2d(0, 0);
 
-    public SwerveDriveState swerveDriveState = new SwerveDriveState();
-    public SwerveDriveState lastSwerveDriveState = new SwerveDriveState();
+    public SwerveDriveState swerveDriveState = new SwerveDriveState(4);
+    public SwerveDriveState lastSwerveDriveState = new SwerveDriveState(4);
 
     private Matrix<N3, N1> stdDevs;
     private static final double kSimLoopPeriod = 0.005;
@@ -89,7 +91,7 @@ public class SwerveSubsystem {
     private boolean atGoal = false;
     private boolean timerHasBeenEnabled = false;
 
-    private String[] limelightNames = { "limelight" };
+    private String[] limelightNames = { "limelight" }; // add limelight code
 
     private HashMap<String, Double> lastAddedVisionTimestampMap = new HashMap<String, Double>();
 
@@ -101,7 +103,7 @@ public class SwerveSubsystem {
                 SwerveConstants.BackLeft,
                 SwerveConstants.BackRight);
 
-        drive_robot_rel = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
+        drive_robot_rel = new SwerveRequest.ApplyRobotVelocity().withDriveRequestType(DriveRequestType.Velocity);
         drive_field_rel = new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity)
                 .withDeadband(0.08)
                 .withRotationalDeadband(0.06 * SwerveConstants.maxRotSpeed);
@@ -167,7 +169,7 @@ public class SwerveSubsystem {
         }
     }
 
-    public ChassisSpeeds getTeleopDriveSpeeds() {
+    public ChassisVelocities getTeleopDriveSpeeds() {
         double xVariable = driverXboxController.getLeftX();
         double yVariable = driverXboxController.getLeftY();
         double mag = Math.hypot(xVariable, yVariable);
@@ -188,9 +190,9 @@ public class SwerveSubsystem {
             forward *= -1.0;
         }
 
-        driverDesiredSpeeds.vxMetersPerSecond = forward;
-        driverDesiredSpeeds.vyMetersPerSecond = strafe;
-        driverDesiredSpeeds.omegaRadiansPerSecond = rotate;
+        driverDesiredSpeeds.vx = forward;
+        driverDesiredSpeeds.vy = strafe;
+        driverDesiredSpeeds.omega = rotate;
 
         return driverDesiredSpeeds;
 
@@ -208,8 +210,8 @@ public class SwerveSubsystem {
         return swerveDriveState.Pose;
     }
 
-    public ChassisSpeeds getRobotSpeeds() {
-        return swerveDriveState.Speeds;
+    public ChassisVelocities getRobotSpeeds() {
+        return swerveDriveState.Velocity;
     }
 
     public double getRobotRotationSpeed() {
@@ -256,7 +258,7 @@ public class SwerveSubsystem {
     public void setDriveToRobotRelativeOffset(Transform2d vectorToMoveRobotFrame, double translationToleranceMeters,
             double maxSpeed, double rotationToleranceDegrees, double maxAngularSpeed) {
         this.driveToPoseTargetPose = swerveDriveState.Pose.plus(
-                vectorToMoveRobotFrame.plus(new Transform2d(Translation2d.kZero, swerveDriveState.Pose.getRotation())));
+                vectorToMoveRobotFrame.plus(new Transform2d(Translation2d.ZERO, swerveDriveState.Pose.getRotation())));
         setDriveToPose(driveToPoseTargetPose, translationToleranceMeters, maxSpeed, rotationToleranceDegrees,
                 maxAngularSpeed);
     }
@@ -306,12 +308,12 @@ public class SwerveSubsystem {
         if (SwerveConstants.useLimelight) {
             addVisionPosesToPoseEstimator();
         }
-        robotSpeed = new Translation2d(swerveDriveState.Speeds.vxMetersPerSecond,
-                swerveDriveState.Speeds.vyMetersPerSecond).getNorm();
+        robotSpeed = new Translation2d(swerveDriveState.Velocity.vx,
+                swerveDriveState.Velocity.vy).getNorm();
         getTeleopDriveSpeeds();
-        DogLog.log("Swerve/swerveDriveState/ModuleStates", swerveDriveState.ModuleStates);
+        DogLog.log("Swerve/swerveDriveState/ModuleStates", swerveDriveState.ModuleVelocities);
         DogLog.log("Swerve/swerveDriveState/EstimatedPose", swerveDriveState.Pose);
-        DogLog.log("Swerve/swerveDriveState/Speeds", swerveDriveState.Speeds);
+        DogLog.log("Swerve/swerveDriveState/Speeds", swerveDriveState.Velocity);
         DogLog.log("Swerve/TopSpeedPercent", currTopSpeedPercent);
         DogLog.log("Swerve/TopRotationSpeedPercent", currTopRotationSpeedPercent);
         DogLog.log("Swerve/TeleopDesiredSpeeds", driverDesiredSpeeds);
@@ -330,9 +332,9 @@ public class SwerveSubsystem {
         lastSwerveDriveState = swerveDriveState;
         swerveDriveState = drivetrain.getState();
 
-        currentTime = Timer.getFPGATimestamp();
+        currentTime = Timer.getTimestamp();
 
-        if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.rightXDeadband) {
+        if (Math.abs(driverDesiredSpeeds.omega) > SwerveConstants.rightXDeadband) {
             rotationJoystickLastTouched = currentTime;
 
             if (systemState == SystemState.SNAP || systemState == SystemState.SNAP_POINT) {
@@ -351,23 +353,23 @@ public class SwerveSubsystem {
     }
 
     private void teleopDrive() {
-        if (Math.abs(driverDesiredSpeeds.omegaRadiansPerSecond) > SwerveConstants.rightXDeadband
+        if (Math.abs(driverDesiredSpeeds.omega) > SwerveConstants.rightXDeadband
                 || lastMaintainHeadingAngle.isEmpty()
                 || ((currentTime - highSpeedLastTime) > 0.1)
                 || ((currentTime - rotationJoystickLastTouched < 0.2))) {
 
             drivetrain
                     .setControl(drive_field_rel
-                            .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                            .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                            .withVelocityX(driverDesiredSpeeds.vx * getRobotTopSpeed())
+                            .withVelocityY(driverDesiredSpeeds.vy * getRobotTopSpeed())
                             .withRotationalRate(
-                                    driverDesiredSpeeds.omegaRadiansPerSecond * getRobotRotationSpeed()));
+                                    driverDesiredSpeeds.omega * getRobotRotationSpeed()));
             lastMaintainHeadingAngle = Optional.of(swerveDriveState.Pose.getRotation());
 
         } else {
             drivetrain.setControl(drive_snap
-                    .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                    .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                    .withVelocityX(driverDesiredSpeeds.vx * getRobotTopSpeed())
+                    .withVelocityY(driverDesiredSpeeds.vy * getRobotTopSpeed())
                     .withTargetDirection(lastMaintainHeadingAngle.get()));
 
         }
@@ -377,15 +379,15 @@ public class SwerveSubsystem {
 
     private void snap() {
         drivetrain.setControl(drive_snap
-                .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                .withVelocityX(driverDesiredSpeeds.vx * getRobotTopSpeed())
+                .withVelocityY(driverDesiredSpeeds.vy * getRobotTopSpeed())
                 .withTargetDirection(snapAngle));
     }
 
     private void snapPoint() {
         drivetrain.setControl(drive_snap
-                .withVelocityX(driverDesiredSpeeds.vxMetersPerSecond * getRobotTopSpeed())
-                .withVelocityY(driverDesiredSpeeds.vyMetersPerSecond * getRobotTopSpeed())
+                .withVelocityX(driverDesiredSpeeds.vx * getRobotTopSpeed())
+                .withVelocityY(driverDesiredSpeeds.vy * getRobotTopSpeed())
                 .withTargetDirection(FieldUtil.getFieldRelativeAngleToPose(swerveDriveState.Pose, snapPoint)));
     }
 
@@ -393,9 +395,9 @@ public class SwerveSubsystem {
         Translation2d error = driveToPoseTargetPose.getTranslation()
                 .minus(swerveDriveState.Pose.getTranslation());
         double distanceToGoal = error.getNorm();
-        Rotation2d directionOfTravel = error.getAngle();
+        Rotation2d directionOfTravel = error.getAngle().orElse(Rotation2d.ZERO);
         double velocityOutput = 0.0;
-        if (DriverStation.isAutonomous()) {
+        if (RobotState.isAutonomous()) {
             velocityOutput = Math.min(
                     Math.abs(SwerveConstants.autoDriveToPoseController.calculate(distanceToGoal, 0)),
                     driveToPoseMaxSpeed);
@@ -433,7 +435,7 @@ public class SwerveSubsystem {
         }
         tranlationMag = Math.min(tranlationMag, maxVelocity);
 
-        diffRotation = difference.getAngle();
+        diffRotation = difference.getAngle().orElse(Rotation2d.ZERO);
         xVelocity = tranlationMag * diffRotation.getCos();
         yVelocity = tranlationMag * diffRotation.getSin();
         double xSlew = xVelocity;
@@ -456,70 +458,11 @@ public class SwerveSubsystem {
     private void calibration() {
         // hi
         // how's it going?
+        // very well hbu?
     }
 
     public void addVisionPosesToPoseEstimator() {
-
-        for (String limelightName : limelightNames) {
-
-            LimelightHelpers.SetRobotOrientation(limelightName, swerveDriveState.Pose.getRotation().getDegrees(), 0,
-                    0, 0,
-                    0, 0);
-
-            boolean isDisabled = DriverStation.isDisabled();
-            if (isDisabled) {
-                LimelightHelpers.SetFiducialDownscalingOverride(limelightName, 1);
-                LimelightHelpers.SetThrottle(limelightName, 100);
-            } else {
-                LimelightHelpers.SetFiducialDownscalingOverride(limelightName, 0);
-                LimelightHelpers.SetThrottle(limelightName, 0);
-            }
-            DogLog.log("Swerve/" + limelightName + "HeartBeat",
-                    NetworkTableInstance.getDefault().getTable(limelightName).getEntry("hb").getDouble(0));
-            DogLog.log("Swerve/" + limelightName + "TV", LimelightHelpers.getTV(limelightName));
-            if (limelightName.equals("limelight-hp")) {
-
-                continue;
-
-            }
-            PoseEstimate estimatePoseMT2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightName);
-            PoseEstimate estimatePoseMT1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(limelightName);
-            PoseEstimate poseToAdd;
-
-            if (estimatePoseMT1 == null || estimatePoseMT2 == null) {
-                continue;
-            }
-
-            // This prevents pose estimator from having crazy poses if the Limelight loses
-            // power
-            if (estimatePoseMT2.tagCount == 0
-                    || estimatePoseMT2.pose.getX() == 0.0 && estimatePoseMT2.pose.getY() == 0.0) {
-                continue;
-            }
-            if (estimatePoseMT2.timestampSeconds == lastAddedVisionTimestampMap.getOrDefault(limelightName, 0.0)) {
-                continue;
-            }
-
-            DogLog.log("Swerve/" + limelightName + "_avgTagArea", estimatePoseMT1.avgTagArea);
-            if (estimatePoseMT1.avgTagArea >= (isDisabled ? 0.1 : 1.5) && !limelightName.equals("limelight-hp")) {
-
-                poseToAdd = estimatePoseMT1;
-                stdDevs = isDisabled ? SwerveConstants.megaTag1DisabledstdDev : SwerveConstants.megaTag1stdDev;
-
-            } else {
-                poseToAdd = estimatePoseMT2;
-                stdDevs = SwerveConstants.megaTag2stdDev;
-            }
-
-            DogLog.log("Swerve/" + limelightName + "_PoseMT2", estimatePoseMT2.pose);
-            DogLog.log("Swerve/" + limelightName + "_PoseMT1", estimatePoseMT1.pose);
-            DogLog.log("Swerve/" + limelightName + "_lastAddedPose", poseToAdd.pose);
-
-            drivetrain.addVisionMeasurement(poseToAdd.pose, Utils.fpgaToCurrentTime(poseToAdd.timestampSeconds),
-                    stdDevs);
-            lastAddedVisionTimestampMap.put(limelightName, Utils.fpgaToCurrentTime(poseToAdd.timestampSeconds));
-
-        }
+        // add vision code
 
     }
 

@@ -7,11 +7,11 @@ package frc.robot.swerve;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
+import org.wpilib.math.linalg.Matrix;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.numbers.N1;
+import org.wpilib.math.numbers.N3;
 import frc.robot.swerve.generated.CompTunerConstants;
 
 /** Add your docs here. */

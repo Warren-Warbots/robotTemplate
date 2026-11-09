@@ -1,8 +1,8 @@
 package frc.robot.autos;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.Timer;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.system.Timer;
 
 public class DriveForwardAuto extends WarbotAuto {
 
@@ -51,8 +51,7 @@ public class DriveForwardAuto extends WarbotAuto {
                 break;
 
             case TEST_1:
-                DogLog.log("driveArc", manager.driveArc(TEST_1, 2.0, 3.5, 0.4, 90.0, 100, true, true, mirror));
-                if (manager.driveArc(TEST_1, 2.0, 3.5, 0.4, 90.0, 100, true, true, mirror)) {
+                if (manager.drivePath(TEST_1, 2.0, 3.5, 0.4, true, mirror)) {
                     // After running the starting state you can follow each path using the drivePath
                     // function
                     if (manager.swerve.velocityAtGoal()) {

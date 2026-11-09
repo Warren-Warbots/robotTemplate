@@ -4,19 +4,22 @@
 
 package frc.robot.lights_subsystem;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.CANdle;
 import dev.doglog.DogLog;
-import edu.wpi.first.wpilibj.Timer;
+
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.system.Timer;
 import frc.robot.Constants;
 import frc.robot.robot_manager.CurrentRobotState;
 
 public class LightsSubsystem {
   private CurrentRobotState state;
-  private double timestampAtSetState = Timer.getFPGATimestamp();
+  private double timestampAtSetState = Timer.getTimestamp();
   CANdle candle;
 
   public LightsSubsystem() {
-    candle = new CANdle(Constants.lightsId);
+    candle = new CANdle(Constants.lightsId, new CANBus(CANPort.CAN_D0));
     candle.getConfigurator().apply(LightsConstants.candleConfig);
   }
 
@@ -26,7 +29,7 @@ public class LightsSubsystem {
 
   public void periodic() {
     // This is where your state machine lives
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
+    double timeInState = Timer.getTimestamp() - timestampAtSetState;
     DogLog.log("LightsSubsystem/state", state.name());
 
     switch (state) {

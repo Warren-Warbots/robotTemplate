@@ -3,13 +3,16 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot.example_pivator_subsystem;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import dev.doglog.DogLog;
-import edu.wpi.first.wpilibj.Timer;
+
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.system.Timer;
 import frc.robot.Constants;
 import frc.robot.simulation.SimMech;
 import frc.robot.simulation.TalonFXSimProfile;
@@ -20,7 +23,7 @@ public class PivatorSubsystem {
   public WantedState wantedState = WantedState.STOW;
   private SystemState systemState = SystemState.STOWED;
 
-  private double timestampAtSetState = Timer.getFPGATimestamp();
+  private double timestampAtSetState = Timer.getTimestamp();
 
   private final SimMech simMech = new SimMech();
   public static final double rotorInertia = 0.02;
@@ -46,15 +49,17 @@ public class PivatorSubsystem {
      * initialize motors here
      * step 1 is make config object for each motor in subsystem constants folder
      * step 2 is to use configure talon function to apply config to that motor
-     * intakeMotor = new TalonFX(Constants.intake_Motor_ID);
+     * intakeMotor = new TalonFX(Constants.intake_Motor_ID,new
+     * CANBus(CANPort.CAN_S0);
+     * Can port should match what the actual motor is connected to
      */
-    pivotMotor = new TalonFX(Constants.pivotMotorId);
+    pivotMotor = new TalonFX(Constants.pivotMotorId, new CANBus(CANPort.CAN_S0));
     TalonFxUtils.configureTalon(pivotMotor, PivatorConstants.pivotMotorConfig);
-    elevatorFrontMotor = new TalonFX(Constants.elevatorFrontMotorId);
+    elevatorFrontMotor = new TalonFX(Constants.elevatorFrontMotorId, new CANBus(CANPort.CAN_S0));
     TalonFxUtils.configureTalon(elevatorFrontMotor, PivatorConstants.elevatorFrontMotorConfig);
-    elevatorBackMotor = new TalonFX(Constants.elevatorBackMotorId);
+    elevatorBackMotor = new TalonFX(Constants.elevatorBackMotorId, new CANBus(CANPort.CAN_S0));
     TalonFxUtils.configureTalon(elevatorBackMotor, PivatorConstants.elevatorBackMotorConfig);
-    pivotCANcoder = new CANcoder(Constants.pivotCANcoderId);
+    pivotCANcoder = new CANcoder(Constants.pivotCANcoderId, new CANBus(CANPort.CAN_S0));
 
     elevatorFrontMotor.setPosition(0);
     elevatorBackMotor.setPosition(0);
@@ -120,7 +125,7 @@ public class PivatorSubsystem {
     collectInputs();
     systemState = handleStateTransition();
     applyStates();
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
+    double timeInState = Timer.getTimestamp() - timestampAtSetState;
     pivotMotor.setControl(PivatorConstants.pivotPositionVoltage.withPosition(targetRotation));
     elevatorFrontMotor.setControl(PivatorConstants.elevatorMotionMagicVoltage.withPosition(targetHeight));
     if (Utils.isSimulation()) {

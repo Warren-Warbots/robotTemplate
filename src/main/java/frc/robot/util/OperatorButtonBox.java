@@ -1,103 +1,103 @@
 package frc.robot.util;
 
-import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.driverstation.Joystick;
+import org.wpilib.driverstation.POVDirection;
 
 public class OperatorButtonBox {
     int port;
-    CommandJoystick joystick;
+    public Joystick joystick;
 
     public OperatorButtonBox(int port) {
         this.port = port;
-        this.joystick = new CommandJoystick(port);
+        this.joystick = new Joystick(port);
     }
 
-    public Trigger L4_L_Button() {
-        return joystick.button(1); // HANDLE
+    public boolean L4_L_Button() {
+        return joystick.getRawButton(0); // HANDLE
     }
 
-    public Trigger L4_R_Button() {
-        return joystick.button(2); // CRUISE
+    public boolean L4_R_Button() {
+        return joystick.getRawButton(1); // CRUISE
     }
 
-    public Trigger L3_L_Button() {
-        return joystick.button(3); // FLASH
+    public boolean L3_L_Button() {
+        return joystick.getRawButton(2); // FLASH
     }
 
-    public Trigger L3_R_Button() {
-        return joystick.button(4); // AUDIO
+    public boolean L3_R_Button() {
+        return joystick.getRawButton(3); // AUDIO
     }
 
-    public Trigger L2_L_Button() {
-        return joystick.button(5); // WIPERS
+    public boolean L2_L_Button() {
+        return joystick.getRawButton(4); // WIPERS
     }
 
-    public Trigger L2_R_Button() {
-        return joystick.button(6); // MAP
+    public boolean L2_R_Button() {
+        return joystick.getRawButton(5); // MAP
     }
 
-    public Trigger L1_L_Button() {
-        return joystick.button(7); // LIGHT
+    public boolean L1_L_Button() {
+        return joystick.getRawButton(6); // LIGHT
     }
 
-    public Trigger L1_R_Button() {
-        return joystick.button(8); // TALK
+    public boolean L1_R_Button() {
+        return joystick.getRawButton(7); // TALK
     }
 
-    public Trigger ENGINE_START() {
-        return joystick.button(11); // ENGINE START
+    public boolean ENTER() {
+        return joystick.getRawButton(9); // ENTER
     }
 
-    public Trigger ENTER() {
-        return joystick.button(10); // ENTER
+    public boolean ENGINE_START() {
+        return joystick.getRawButton(10); // ENGINE START
     }
 
-    public Trigger MANUAL_INTAKE() {
-        return joystick.button(13); // 1ST UP
+    public boolean REVERSE_SHOOTER_TOGGLE() {
+        return joystick.getRawButton(12); // 1ST UP
     }
 
-    public Trigger MANUAL_OUTTAKE() {
-        return joystick.button(14); // 1ST DOWN
+    public boolean MANUAL_OUTTAKE() {
+        return joystick.getRawButton(13); // 1ST DOWN
     }
 
-    public Trigger FOURTH_UP() {
-        return joystick.button(19); // 4TH UP
+    public boolean FOURTH_UP() {
+        return joystick.getRawButton(18); // 4TH UP
     }
 
-    public Trigger FOURTH_DOWN() {
-        return joystick.button(20); // 4TH DOWN
+    public boolean FOURTH_DOWN() {
+        return joystick.getRawButton(19); // 4TH DOWN
     }
 
-    public Trigger ABS_DOWN() {
-        return joystick.button(21); // ABS DOWN/LEFT
+    public boolean ABS_DOWN() {
+        return joystick.getRawButton(20); // ABS DOWN/LEFT
     }
 
-    public Trigger ABS_UP() {
-        return joystick.button(22); // ABS UP/RIGHT
+    public boolean ABS_UP() {
+        return joystick.getRawButton(21); // ABS UP/RIGHT
     }
 
-    public Trigger ABS_PRESS() {
-        return joystick.button(22); // ABS PRESS
+    public boolean TC_DOWN() {
+        return joystick.getRawButton(22); // TC DOWN/LEFT
     }
 
-    public Trigger TC_DOWN() {
-        return joystick.button(23); // ABS DOWN/LEFT
+    public boolean TC_UP() {
+        return joystick.getRawButton(23); // TC UP/RIGHT
     }
 
-    public Trigger TC_UP() {
-        return joystick.button(24); // ABS UP/RIGHT
+    public boolean ABS_PRESS() {
+        return joystick.getRawButton(24); // ABS PRESS
     }
 
-    public Trigger TC_PRESS() {
-        return joystick.button(26); // ABS PRESS
+    public boolean TC_PRESS() {
+        return joystick.getRawButton(25); // TC PRESS
     }
 
-    public Trigger MANUAL_HANG_UP() {
-        return joystick.pov(0); // JOYSTICK UP
+    public boolean MANUAL_HANG_UP() {
+        return joystick.getPOV() == POVDirection.UP; // JOYSTICK UP
     }
 
-    public Trigger MANUAL_HANG_DOWN() {
-        return joystick.pov(180); // JOYSTICK DOWN
+    public boolean MANUAL_HANG_DOWN() {
+        return joystick.getPOV() == POVDirection.DOWN; // JOYSTICK DOWN
     }
 
 }

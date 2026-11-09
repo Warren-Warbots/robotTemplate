@@ -4,10 +4,13 @@
 
 package frc.robot.example_intake_subsystem;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import dev.doglog.DogLog;
-import edu.wpi.first.wpilibj.Timer;
+
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.system.Timer;
 import frc.robot.Constants;
 import frc.robot.util.TalonFxUtils;
 
@@ -17,19 +20,21 @@ public class IntakeSubsystem {
   public WantedState wantedState = WantedState.STOP;
   private SystemState systemState = SystemState.STOPPED;
 
-  private double timestampAtSetState = Timer.getFPGATimestamp();
+  private double timestampAtSetState = Timer.getTimestamp();
 
   TalonFX intakeMotor;
-  CANrange canrange = new CANrange(Constants.intakeCANrangeId);
+  CANrange canrange = new CANrange(Constants.intakeCANrangeId, new CANBus(CANPort.CAN_S0));
 
   public IntakeSubsystem() {
     /*
      * initialize motors here
      * step 1 is make config object for each motor in subsystem constants folder
      * step 2 is to use configure talon function to apply config to that motor
-     * intakeMotor = new TalonFX(Constants.intake_Motor_ID);
+     * intakeMotor = new TalonFX(Constants.intake_Motor_ID,new
+     * CANBus(CANPort.CAN_S0);
+     * Can port should match what the actual motor is connected to
      */
-    intakeMotor = new TalonFX(Constants.intakeMotorId);
+    intakeMotor = new TalonFX(Constants.intakeMotorId, new CANBus(CANPort.CAN_S0));
     TalonFxUtils.configureTalon(intakeMotor, IntakeConstants.intakeMotorConfig);
   }
 
@@ -93,7 +98,7 @@ public class IntakeSubsystem {
     collectInputs();
     systemState = handleStateTransitions();
     applyStates();
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
+    double timeInState = Timer.getTimestamp() - timestampAtSetState;
   }
 
 }

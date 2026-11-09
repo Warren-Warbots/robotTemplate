@@ -6,10 +6,14 @@ package frc.robot;
 
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.XboxController;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchType;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.framework.TimedRobot;
+import org.wpilib.telemetry.Telemetry;
+import org.wpilib.driverstation.XboxController;
 import frc.robot.autos.Autos;
 import frc.robot.autos.DriveForwardAuto;
 import frc.robot.autos.WarbotAuto;
@@ -34,9 +38,11 @@ public class Robot extends TimedRobot {
   public Robot() {
 
     DogLog.setOptions(
-        new DogLogOptions().withCaptureNt(false)
+        new DogLogOptions()
+            .withCaptureConsole(false)
             .withCaptureDs(true)
-            .withNtPublish(!Constants.IS_AT_COMP));
+            .withNtTunables(!Constants.IS_AT_COMP)
+            .withLogExtras(true));
   }
 
   @Override
@@ -49,8 +55,9 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void robotInit() {
+  public void driverStationConnected() {
     DogLog.log("IsCompBot", Constants.IS_AT_COMP);
+
   }
 
   @Override
@@ -92,16 +99,16 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    SmartDashboard.putNumber("TimeLeft", DriverStation.getMatchTime());
+    DogLog.log("TimeLeft", MatchState.getMatchTime());
     // This is were we call all the driver and operator controllers for use during
     // teleop
-    boolean leftTrigger = driverController.getLeftTriggerAxis() > 0.5;
-    boolean rightTrigger = driverController.getRightTriggerAxis() > 0.5;
-    boolean povLeft = driverController.getPOV() == 270;
-    boolean povRight = driverController.getPOV() == 90;
-    boolean startPressed = driverController.getStartButton();
-    boolean rightBumper = driverController.getRightBumper();
-    boolean leftBumper = driverController.getLeftBumper();
+    boolean leftTrigger = driverController.getLeftTrigger() > 0.5;
+    boolean rightTrigger = driverController.getRightTrigger() > 0.5;
+    boolean povLeft = driverController.getDpadLeftButtonPressed();
+    boolean povRight = driverController.getDpadRightButtonPressed();
+    boolean startPressed = driverController.getMenuButton();
+    boolean rightBumper = driverController.getRightBumperButton();
+    boolean leftBumper = driverController.getLeftBumperButton();
 
     if (leftTrigger) {
       manager.setWantedRobotState(WantedRobotState.AUTO_SCORE_L4);
@@ -120,16 +127,16 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void testInit() {
+  public void utilityInit() {
 
   }
 
   @Override
-  public void testPeriodic() {
+  public void utilityPeriodic() {
   }
 
   @Override
-  public void testExit() {
+  public void utilityExit() {
   }
 
   @Override

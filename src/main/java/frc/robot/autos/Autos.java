@@ -1,39 +1,39 @@
 package frc.robot.autos;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.wpilib.tunable.Selectable;
+import org.wpilib.tunable.Tunables;
 import frc.robot.robot_manager.RobotManager;
 
 /** Add your docs here. */
 public class Autos extends WarbotAuto {
     private RobotManager manager;
-    private final SendableChooser<WarbotAuto> chooser1 = new SendableChooser<>();
-    private final SendableChooser<WarbotAuto> chooser2 = new SendableChooser<>();
-    private final SendableChooser<Boolean> mirrorAuto = new SendableChooser<>();
+    private final Selectable<WarbotAuto> chooser1 = new Selectable<>();
+    private final Selectable<WarbotAuto> chooser2 = new Selectable<>();
+    private final Selectable<Boolean> mirrorAuto = new Selectable<>();
     private WarbotAuto path1;
     private WarbotAuto path2;
     private boolean path1Finished = false;
 
     public Autos(RobotManager robotManager) {
         this.manager = robotManager;
-        chooser1.setDefaultOption("DoNothing", new DoNothingAuto());
-        chooser2.setDefaultOption("DoNothing", new DoNothingAuto());
-        SmartDashboard.putData("chooser1", chooser1);
-        SmartDashboard.putData("chooser2", chooser2);
+        chooser1.addDefault("DoNothing", new DoNothingAuto());
+        chooser2.addDefault("DoNothing", new DoNothingAuto());
+        Tunables.publish("chooser1", chooser1);
+        Tunables.publish("chooser2", chooser2);
 
         path1 = new DoNothingAuto();
         path1.setManager(manager);
         path2 = new DoNothingAuto();
         path2.setManager(manager);
 
-        mirrorAuto.setDefaultOption("(Right) Normal", false);
-        mirrorAuto.addOption("(Right) Normal", false);
-        mirrorAuto.addOption("(Left) Mirrored", true);
-        SmartDashboard.putData("MirrorAuto", mirrorAuto);
+        mirrorAuto.addDefault("(Right) Normal", false);
+        mirrorAuto.add("(Right) Normal", false);
+        mirrorAuto.add("(Left) Mirrored", true);
+        Tunables.publish("MirrorAuto", mirrorAuto);
 
-        chooser1.addOption("DriveForwardAuto", new DriveForwardAuto());
-        chooser2.addOption("DriveForwardAuto", new DriveForwardAuto());
+        chooser1.add("DriveForwardAuto", new DriveForwardAuto());
+        chooser2.add("DriveForwardAuto", new DriveForwardAuto());
 
         // This is where the auto selector is created for the dashboard, alse calling
         // each auto to set it in the auto selector

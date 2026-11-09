@@ -1,7 +1,7 @@
 package frc.robot.autos;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
 import frc.robot.robot_manager.RobotManager;
 import frc.robot.util.FmsUtil;
 

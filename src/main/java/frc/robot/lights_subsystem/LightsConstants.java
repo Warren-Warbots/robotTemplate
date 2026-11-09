@@ -11,7 +11,7 @@ import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.signals.AnimationDirectionValue;
 import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StripTypeValue;
-import edu.wpi.first.wpilibj.util.Color;
+import org.wpilib.util.Color;
 
 /** Add your docs here. */
 public class LightsConstants {
@@ -23,9 +23,9 @@ public class LightsConstants {
         private static int END_LED = 136;
 
         public static SolidColor blue = new SolidColor(START_LED, END_LED)
-                        .withColor(new RGBWColor(Color.kMidnightBlue));
-        public static SolidColor white = new SolidColor(START_LED, END_LED).withColor(new RGBWColor(Color.kWhite));
-        public static SolidColor pink = new SolidColor(START_LED, END_LED).withColor(new RGBWColor(Color.kDarkRed));
+                        .withColor(new RGBWColor(Color.MIDNIGHT_BLUE));
+        public static SolidColor white = new SolidColor(START_LED, END_LED).withColor(new RGBWColor(Color.WHITE));
+        public static SolidColor pink = new SolidColor(START_LED, END_LED).withColor(new RGBWColor(Color.DARK_RED));
 
         public static RainbowAnimation rainbow = new RainbowAnimation(START_LED, END_LED)
                         .withDirection(AnimationDirectionValue.Forward);

@@ -5,10 +5,9 @@
 package frc.robot.robot_manager;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.Timer;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.system.Timer;
 import frc.robot.example_pivator_subsystem.PivatorSubsystem;
-import frc.robot.autos.ArcFollower;
 import frc.robot.autos.PathFollower;
 import frc.robot.example_intake_subsystem.IntakeSubsystem;
 import frc.robot.lights_subsystem.LightsSubsystem;
@@ -23,13 +22,12 @@ public class RobotManager {
   public LightsSubsystem lights;
   public PivatorSubsystem pivot;
   public IntakeSubsystem intake;
-  private double timestampAtSetState = Timer.getFPGATimestamp();
+  private double timestampAtSetState = Timer.getTimestamp();
 
   public boolean hasGP = false;
 
   // Managed Path Following
   private PathFollower currentPathFollower = null;
-  private ArcFollower currentArcFollower = null;
 
   private Pose2d[] lastWaypoints = null;
 
@@ -43,7 +41,7 @@ public class RobotManager {
 
   public void setWantedRobotState(WantedRobotState state) {
     DogLog.log("Robot/wantedState", state);
-    timestampAtSetState = Timer.getFPGATimestamp();
+    timestampAtSetState = Timer.getTimestamp();
     this.wantedState = state;
 
   }
@@ -71,29 +69,6 @@ public class RobotManager {
     return currentPathFollower.run();
   }
 
-  public boolean driveArc(Pose2d[] waypoints, double maxVel, double maxRotVel, double tolerance, double addTurnDegrees,
-      int nPoints, boolean continuous,
-      boolean turnClockwise,
-      boolean mirror) {
-    // If we've started a new path, reset the follower
-    if (waypoints != lastWaypoints) {
-      currentArcFollower = new ArcFollower(this, waypoints)
-          .withMaxVelocity(maxVel)
-          .withMaxRotateVelocity(maxRotVel)
-          .withTolerance(tolerance)
-          .addTurnDegrees(addTurnDegrees)
-          .addTurnPoints(nPoints)
-          .continuous(continuous)
-          .turnClockwise(turnClockwise)
-          .withMirror(mirror);
-      lastWaypoints = waypoints;
-    }
-
-    if (currentArcFollower == null)
-      return true;
-    return currentArcFollower.run();
-  }
-
   /** Concise version for single-point driving in Auto */
   public boolean drivePoint(Pose2d point, double maxVel, double tolerance, boolean mirror) {
     return drivePath(new Pose2d[] { point }, maxVel, 3.5, tolerance, false, mirror);
@@ -113,7 +88,7 @@ public class RobotManager {
   }
 
   public void periodic() {
-    double timeInState = Timer.getFPGATimestamp() - timestampAtSetState;
+    double timeInState = Timer.getTimestamp() - timestampAtSetState;
     lights.setLightState(currentState);
     collectInputs();
     currentState = handleStateTransitions();
