@@ -32,14 +32,16 @@ public class SwerveConstants {
 
     // driver configs - driver should tune these
 
-    // deadband, below this number, controller doesnt do anything
+    // deadband, below this number, controller doesnt do anything; tune for driver
     public static final double leftXDeadband = 0.05;
-    public static final double rightXDeadband = 0.05;
+    public static final double rightXDeadband = 0.025;
     public static final double leftYDeadband = 0.05;
 
+    // exponent, changes the curve of how the robot accelerates, think of a graph;
+    // tune for driver
     public static final double leftXExponent = 3;
     public static final double leftYExponent = 3;
-    public static final double rightXExponent = 2;
+    public static final double rightXExponent = 3;
 
     // vision configs
     public static final boolean useLimelight = true;
