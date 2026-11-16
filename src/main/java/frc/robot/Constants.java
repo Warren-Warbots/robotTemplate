@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 
 public class Constants {
         public static boolean IS_AT_COMP = false;
+        double currentLimits;
 
         public static final String BETA_SERIAL_NUMBER = "-"; // 0329F366
         public static final String SERIAL_NUMBER = System.getenv("serialnum");
@@ -21,6 +22,13 @@ public class Constants {
                         .withDutyCycleOpenLoopRampPeriod(0.04)
                         .withTorqueOpenLoopRampPeriod(0.04)
                         .withVoltageOpenLoopRampPeriod(0.04);
+
+        public void applyMotorLimitConfigs(double currentLimits) {
+                this.currentLimits = currentLimits;
+                // SubsystemConstants.MotorConfig.CurrentLimits.withSupplyCurrentLimit(currentLimits);
+
+        }
+
         // SWERVE
         // Note: swerve IDs will generate in swerve CompTunerConstants, but should be
         // moved here for convienence
