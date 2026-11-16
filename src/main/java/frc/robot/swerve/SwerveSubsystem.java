@@ -172,15 +172,17 @@ public class SwerveSubsystem {
     public ChassisVelocities getTeleopDriveSpeeds() {
         double xVariable = driverXboxController.getLeftX();
         double yVariable = driverXboxController.getLeftY();
-        double mag = Math.hypot(xVariable, yVariable);
+        double mag = Math.min(1.0, Math.hypot(xVariable, yVariable));
         double direction = Math.atan2(yVariable, xVariable);
 
         double translationScaled = ControllerHelpers.getExponent(
                 ControllerHelpers.getDeadbanded(mag, SwerveConstants.leftYDeadband),
                 SwerveConstants.leftYExponent);
-        double rotate = -1.0 * ControllerHelpers.getExponent(
-                ControllerHelpers.getDeadbanded(driverXboxController.getRightX(), SwerveConstants.rightXDeadband),
-                SwerveConstants.rightXExponent);
+        double rotate = -1.0
+                * ControllerHelpers.getExponent(
+                        ControllerHelpers.getDeadbanded(
+                                driverXboxController.getRightX(), SwerveConstants.rightXDeadband),
+                        SwerveConstants.rightXExponent);
 
         double forward = Math.sin(direction) * translationScaled;
         double strafe = Math.cos(direction) * translationScaled;
