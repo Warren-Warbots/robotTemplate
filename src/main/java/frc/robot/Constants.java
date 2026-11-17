@@ -23,12 +23,6 @@ public class Constants {
                         .withTorqueOpenLoopRampPeriod(0.04)
                         .withVoltageOpenLoopRampPeriod(0.04);
 
-        public void applyMotorLimitConfigs(double currentLimits) {
-                this.currentLimits = currentLimits;
-                // SubsystemConstants.MotorConfig.CurrentLimits.withSupplyCurrentLimit(currentLimits);
-
-        }
-
         // SWERVE
         // Note: swerve IDs will generate in swerve CompTunerConstants, but should be
         // moved here for convienence
