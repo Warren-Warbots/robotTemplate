@@ -1,7 +1,17 @@
 package frc.robot;
 
 import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
+import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class Constants {
         public static boolean IS_AT_COMP = false;
@@ -23,10 +33,17 @@ public class Constants {
                         .withTorqueOpenLoopRampPeriod(0.04)
                         .withVoltageOpenLoopRampPeriod(0.04);
 
-        public void applyMotorCurrentLimit(double currentLimit) {
-                this.currentLimit = currentLimit;
-                // SubsystemConstants.motorConfig.withSupplyCurrentLimit(currentLimit);
+        public static void applyMotorCurrentLimit(double currentLimit) {
+                baseMotorConfig.CurrentLimits.withSupplyCurrentLimit(currentLimit);
         }
+
+        public static TalonFXConfiguration baseMotorConfig = new TalonFXConfiguration()
+                        .withCurrentLimits(
+                                        new CurrentLimitsConfigs()
+                                                        .withSupplyCurrentLimit(45)
+                                                        .withStatorCurrentLimit(90)
+                                                        .withSupplyCurrentLimitEnable(true)
+                                                        .withStatorCurrentLimitEnable(true));
 
         // SWERVE
         // Note: swerve IDs will generate in swerve CompTunerConstants, but should be

@@ -18,6 +18,7 @@ import frc.robot.autos.Autos;
 import frc.robot.autos.DriveForwardAuto;
 import frc.robot.autos.WarbotAuto;
 import frc.robot.example_pivator_subsystem.PivatorSubsystem;
+import frc.robot.example_intake_subsystem.IntakeConstants;
 import frc.robot.example_intake_subsystem.IntakeSubsystem;
 import frc.robot.lights_subsystem.LightsSubsystem;
 import frc.robot.robot_manager.RobotManager;
@@ -62,6 +63,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledInit() {
+
   }
 
   @Override

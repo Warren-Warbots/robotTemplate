@@ -99,6 +99,7 @@ public class IntakeSubsystem {
     systemState = handleStateTransitions();
     applyStates();
     double timeInState = Timer.getTimestamp() - timestampAtSetState;
+
   }
 
 }
