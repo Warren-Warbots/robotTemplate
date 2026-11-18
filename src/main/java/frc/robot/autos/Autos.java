@@ -11,8 +11,10 @@ public class Autos extends WarbotAuto {
     private final Selectable<WarbotAuto> chooser1 = new Selectable<>();
     private final Selectable<WarbotAuto> chooser2 = new Selectable<>();
     private final Selectable<Boolean> mirrorAuto = new Selectable<>();
+    // This is were we define the selectors
     private WarbotAuto path1;
     private WarbotAuto path2;
+    // here we define the sut
     private boolean path1Finished = false;
 
     public Autos(RobotManager robotManager) {

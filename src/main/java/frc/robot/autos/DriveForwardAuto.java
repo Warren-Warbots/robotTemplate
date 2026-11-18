@@ -53,7 +53,7 @@ public class DriveForwardAuto extends WarbotAuto {
             case TEST_1:
                 if (manager.drivePath(TEST_1, 2.0, 3.5, 0.4, true, mirror)) {
                     // After running the starting state you can follow each path using the drivePath
-                    // function
+                    // function which can be found in line 54 in the robot manager.
                     if (manager.swerve.velocityAtGoal()) {
                         currentState = currentState.next();
                         // This if statement waits till the path is completed to go to the next state

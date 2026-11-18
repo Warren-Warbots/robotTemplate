@@ -50,7 +50,7 @@ public class PivatorSubsystem {
      * step 1 is make config object for each motor in subsystem constants folder
      * step 2 is to use configure talon function to apply config to that motor
      * intakeMotor = new TalonFX(Constants.intake_Motor_ID,new
-     * CANBus(CANPort.CAN_S0);
+     * CANBus(CANPort.CAN_S0); Each susbystem will have a different port from CAN_S0-S4
      * Can port should match what the actual motor is connected to
      */
     pivotMotor = new TalonFX(Constants.pivotMotorId, new CANBus(CANPort.CAN_S0));
@@ -60,10 +60,14 @@ public class PivatorSubsystem {
     elevatorBackMotor = new TalonFX(Constants.elevatorBackMotorId, new CANBus(CANPort.CAN_S0));
     TalonFxUtils.configureTalon(elevatorBackMotor, PivatorConstants.elevatorBackMotorConfig);
     pivotCANcoder = new CANcoder(Constants.pivotCANcoderId, new CANBus(CANPort.CAN_S0));
+    // The Motor IDs can be found in Constants.java
+
 
     elevatorFrontMotor.setPosition(0);
     elevatorBackMotor.setPosition(0);
     elevatorBackMotor.setControl(new Follower(elevatorFrontMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+    // This is were we set a motor to follow another motor, 
+    // the last input of the follower telling the motor to with spin with or oposite of the motor
 
     pivotSimProfile = new TalonFXSimProfile(pivotMotor, rotorInertia);
     frontElevatorSimProfile = new TalonFXSimProfile(elevatorFrontMotor, rotorInertia);
